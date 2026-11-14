@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+  Neram design tokens.
+  The palette comes from a peacock (the owner's Pancha Pakshi bird) and the inks of a
+  Tamil daily-sheet calendar: cool paper, deep peacock ink, kumkum red, turmeric.
+*/
+@theme {
+  --color-paper: #edf2f0;
+  --color-panel: #e0e9e5;
+  --color-line: #c3d1cc;
+  --color-ink: #10262e;
+  --color-mute: #4d636a;
+  --color-peacock: #0a6b74;
+  --color-deep: #083f4a;
+
+  /* The five verdict tiers, best to worst. */
+  --color-go: #0b7a5b;
+  --color-good: #62b59c;
+  --color-steady: #e6d7a0;
+  --color-hold: #e2983a;
+  --color-avoid: #b3243b;
+
+  --font-sans: "Hanken Grotesk Variable", "Noto Sans Tamil Variable", system-ui, sans-serif;
+  --font-display: "Anek Tamil Variable", "Hanken Grotesk Variable", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 1;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background: var(--color-peacock);
+    color: var(--color-paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-peacock);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* Display type: Anek Tamil, wide and heavy for the verdict, normal width for headings. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-stretch: 100%;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.verdict-word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 125%;
+  line-height: 0.82;
+  letter-spacing: -0.035em;
+}
+.tamil {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+/* Tier colour pairs: background plus a readable foreground. */
+.tier-go { background: var(--color-go); color: #f1f7f4; }
+.tier-good { background: var(--color-good); color: #06281f; }
+.tier-steady { background: var(--color-steady); color: #3a3210; }
+.tier-hold { background: var(--color-hold); color: #33200a; }
+.tier-avoid {
+  background: var(--color-avoid);
+  color: #fdf1f2;
+}
+/* "Wait" bars carry a hatch as well as colour, so they read without colour vision. */
+.bar-avoid {
+  background-image: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.28) 0 2px, transparent 2px 6px);
+}
+
+.rule { border-top: 1px solid var(--color-line); }
+
+/* The one orchestrated moment: the day's skyline rises once when it first appears. */
+@keyframes rise {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.skyline-bar {
+  transform-origin: bottom;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes now-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.now-dot { animation: now-pulse 2.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skyline-bar, .now-dot { animation: none; }
+}
+
+@layer base {
+  input, select, button { font: inherit; color: inherit; }
+  input[type="date"], input[type="time"], input[type="text"], input[type="number"], select {
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: 0.5rem 0.65rem;
+    width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--color-peacock); }
+}
