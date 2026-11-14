@@ -4,6 +4,7 @@
 // The weights are a judgement about how much each tradition should count. They are kept
 // in one place (this file) so they are easy to read and change.
 
+import { DashaGocharam, dashaGocharam } from "./dashaTransit";
 import {
   BAD_YOGAS,
   NAKSHATRA,
@@ -108,12 +109,17 @@ export interface DayContext {
   sav: number[] | null;
   /** Yogi, avayogi, karana nathan and the standing they give each planet. */
   yogi: YogiInfo;
+  /** The running dasa, bhukti and antaram lords judged in the day's sky. */
+  gocharam: DashaGocharam | null;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
   const panchang = panchangFor(frame);
   const mid = new Date(frame.sunrise.getTime() + frame.dayLength / 2);
   const positions = allPositions(mid);
+  const dasha = runningDasha(natal.mahas, mid);
+  const yogi = yogiInfo(natal);
+  const useLagna = natal.profile.timeConfirmed;
   return {
     natal,
     frame,
@@ -121,10 +127,11 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     pakshi: pakshiFor(natal.bird, panchang),
     positions,
     contacts: contacts(natal, positions, mid),
-    dasha: runningDasha(natal.mahas, mid),
-    useLagna: natal.profile.timeConfirmed,
-    sav: natal.profile.timeConfirmed ? ashtakavarga(natal).sav : null,
-    yogi: yogiInfo(natal),
+    dasha,
+    useLagna,
+    sav: useLagna ? ashtakavarga(natal).sav : null,
+    yogi,
+    gocharam: useLagna && dasha ? dashaGocharam(natal, yogi, dasha, positions, mid) : null,
   };
 }
 
@@ -667,6 +674,14 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
       if (st.boost !== 0) {
         for (const k of KEYS) e[k] += st.boost * 1.5;
         notes.push(`${PLANET_INFO[lord].en} ${st.reasons.join(" and ")}`);
+      }
+    }
+    // The same lords in today's sky: a period lord that is strong in transit delivers more.
+    if (ctx.gocharam) {
+      const v = Math.max(-4, Math.min(4, ctx.gocharam.net * 1.5));
+      if (Math.abs(v) >= 0.5) {
+        for (const k of KEYS) e[k] += v;
+        notes.push(`in the sky now the period lords are ${ctx.gocharam.word.toLowerCase()} (${ctx.gocharam.lords.map((l) => `${PLANET_INFO[l.lord].en} ${l.word.toLowerCase()}`).filter((x, i, a) => a.indexOf(x) === i).join(", ")})`);
       }
     }
     if (KEYS.some((k) => e[k] !== 0))

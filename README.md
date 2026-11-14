@@ -31,8 +31,10 @@ It deploys to Vercel as a plain Next.js app with no configuration.
 | Now | The verdict for this minute (Go, Good, Steady, Hold, Wait), per-activity scores, the day as a skyline, the reasons, do's and don'ts, best windows ahead |
 | Day plan | Any date: every activity across the day, best windows, hour-by-hour list, full panchangam, hora and Gowri tables |
 | Pancha Pakshi | Your bird, its friends and enemies, all ten yamas with their five sub-periods and ratings |
-| Dasa | Running dasa, bhukti, antaram and sookshma with dates, and what each lord rules in your chart |
+| Dasa | Running dasa, bhukti, antaram and sookshma with dates, what each lord rules in your chart, and how strong each lord is in today's sky (gocharam) |
 | Yogi and avayogi | Yogi, Sahayogi and Avayogi planets and stars, Moon and planet passes over them, karana nathan, HD and LD planets, upasana deivam |
+| Yogas | Pancha Mahapurusha, raja, dhana and other yogas found in your chart; how each is formed, what weakens or helps it, when its planets' periods switch it on, how to use it |
+| Strengthen and recover | What is weighing on this hour or day and its fix, a reset routine for a bad day, and each planet's practice (strengthen, settle or honour) ranked by need |
 | Chart and transits | Birth chart, today's sky, Chandra Naadi, planets crossing natal planets, gochara, Elarai Sani, Ashtakavarga, sign changes ahead |
 | Money | 30-day money signals, best money hours today, your money lords and Indu lagna, dasa periods and slow transits tied to income |
 | Find a time | Pick an activity and a range (3 to 30 days); lists the strongest windows ranked, and day by day |
@@ -53,6 +55,10 @@ lib/astro/
   wealth.ts      money signals
   ashtaka.ts     Ashtakavarga points per sign
   yogi.ts        yogi and avayogi points, karana nathan, HD and LD planets
+  dignity.ts     exaltation, own sign, friendships, planetary sight, combustion
+  yogas.ts       yoga detection, activation by dasa periods, Guru and Sani triggers
+  dashaTransit.ts  the dasa, bhukti and antaram lords judged in the current sky
+  remedies.ts    per-planet practices, which planets to strengthen or settle, bad-day recovery
   match.ts       two-chart comparison (koottu vilaivu)
   saram.ts       Sara vithai rules
   score.ts       muhurtha lagna, and the weights that combine everything into 0-100 scores  <- tune here

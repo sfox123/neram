@@ -189,6 +189,22 @@ function SetupForm() {
             planets (HD and LD) are shown on the Yogi page.
           </p>
           <p>
+            <strong>Yogas.</strong> The Yogas page checks about thirty classical combinations with whole-sign houses: the five Pancha Mahapurusha yogas
+            (a planet in its own or exalted sign in a kendra), raja yogas (kendra and trine lords joined by conjunction, mutual sight or exchange),
+            dhana yogas, neecha bhanga, parivartana and the Sun and Moon yogas. A yoga counts as switched on while one of its planets holds your dasa,
+            bhukti or antaram; Guru passing over or looking at the planet is listed as an extra trigger.
+          </p>
+          <p>
+            <strong>Period lords in transit.</strong> The dasa, bhukti and antaram lords are each weighed in the day&rsquo;s sky: dignity of the sign
+            they are crossing, their own Ashtakavarga points there (four or more is favourable; Rahu is read through Sani and Ketu through Sevvai), the
+            house from lagna and Moon, combustion, Guru and Sani over their birth position, and your yoga and avayoga taras. The weighted result moves
+            every score by up to 4 points either way.
+          </p>
+          <p>
+            <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
+            lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
+          </p>
+          <p>
             <strong>Ashtakavarga.</strong> Each birth planet and the lagna give points to certain signs (337 in all). The points in the sign the Moon is
             crossing add or take up to 5 from the score. The full table is on the Chart page.
           </p>
@@ -225,6 +241,11 @@ function SetupForm() {
             ["Yogi, avayogi, sahayogi: lagna rules and exceptions (Thirukanitha Panchangam)", "https://thirukanithapanchangam.com/yogi-avayogi-saha-yogi-palangal-tamil/"],
             ["Karana nathan table and karana worship (Dinakaran)", "https://www.dinakaran.com/spirtual_aanmeegam/worship-is-the-key-to-success-in-business/"],
             ["Paagai (degree) astrology: HD, LD and upasana (Lanka4)", "https://www.lanka4.com/news/1044222/what-is-bhagai-astrology"],
+            ["Pancha Mahapurusha yogas: formation and conditions (VedicBirth)", "https://www.vedicbirth.com/blog/panch-mahapurusha-yoga-guide"],
+            ["Pancha Mahapurusha yogas in B. V. Raman's Three Hundred Important Combinations", "https://barbarapijan.com/bpa/Yoga/300ComBVRaman/300Raman_019-023_Panchmahapurusha.htm"],
+            ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
+            ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
+            ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],
             ["Sara sastram: weekday rule and effects of each nostril (Maalaimalar)", "https://www.maalaimalar.com/health/others/kadhambam/tamil-news-kadhambam-sangati-singing-strings-685298"],
             ["Sara sastram: directions and switching sides (Sitharkal Sankamam)", "http://sitharkalsankamam.blogspot.com/2013/07/blog-post_12.html"],
             ["Siva Swarodaya tithi and sunrise rule (Swara Yoga)", "https://www.swarayoga.org/SwaraCycle.htm"],
