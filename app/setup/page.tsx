@@ -183,6 +183,12 @@ function SetupForm() {
             2nd and 11th lords, and Guru and Sani changing sign.
           </p>
           <p>
+            <strong>Yogi and avayogi.</strong> The yogi point is the Sun plus the Moon plus 93°20′ at birth; its star lord is the Yogi and its sign lord
+            the Sahayogi. The avayogi point lies 186°40′ further on. The Moon crossing the yoga tara adds 8 to the score and the avayoga tara takes 7;
+            horas, dasa lords and transiting planets are weighted by how they stand in this scheme. The karana nathan and the highest and lowest degree
+            planets (HD and LD) are shown on the Yogi page.
+          </p>
+          <p>
             <strong>Ashtakavarga.</strong> Each birth planet and the lagna give points to certain signs (337 in all). The points in the sign the Moon is
             crossing add or take up to 5 from the score. The full table is on the Chart page.
           </p>
@@ -213,6 +219,12 @@ function SetupForm() {
             ["Pancha Pakshi reference data used for cross-checking (PyJHora)", "https://github.com/naturalstupid/PyJHora"],
             ["Gowri panchangam order, after the Pambu panchangam (Drik Panchang)", "https://www.drikpanchang.com/tamil/tamil-gowri-panchangam.html"],
             ["Chandra Naadi, Tirupur S. Gopalakrishnan", "https://www.exoticindiaart.com/book/details/chandra-naadi-baf059/"],
+            ["Yogi, Tithi, Karana and Indu Lagna, Tirupur S. Gopalakrishnan (GK)", "https://books.google.com/books/about/Yogi_Thithi_Karana_and_Indu_Lagna.html?id=H6MKEQAAQBAJ"],
+            ["GK win Degree System of Astrology (HD and LD planets)", "https://notionpress.com/author/Gopalakrishnan"],
+            ["Yogi and avayogi points: calculation (Tuning My Melody)", "http://tuningmymelody.blogspot.com/2019/03/the-concept-of-yogi-and-avayogi.html"],
+            ["Yogi, avayogi, sahayogi: lagna rules and exceptions (Thirukanitha Panchangam)", "https://thirukanithapanchangam.com/yogi-avayogi-saha-yogi-palangal-tamil/"],
+            ["Karana nathan table and karana worship (Dinakaran)", "https://www.dinakaran.com/spirtual_aanmeegam/worship-is-the-key-to-success-in-business/"],
+            ["Paagai (degree) astrology: HD, LD and upasana (Lanka4)", "https://www.lanka4.com/news/1044222/what-is-bhagai-astrology"],
             ["Sara sastram: weekday rule and effects of each nostril (Maalaimalar)", "https://www.maalaimalar.com/health/others/kadhambam/tamil-news-kadhambam-sangati-singing-strings-685298"],
             ["Sara sastram: directions and switching sides (Sitharkal Sankamam)", "http://sitharkalsankamam.blogspot.com/2013/07/blog-post_12.html"],
             ["Siva Swarodaya tithi and sunrise rule (Swara Yoga)", "https://www.swarayoga.org/SwaraCycle.htm"],

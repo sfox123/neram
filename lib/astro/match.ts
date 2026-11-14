@@ -12,6 +12,7 @@ import { houseFrom, NAKSHATRA, PLANET_INFO, PlanetId, RASI, signOf, TARA_MEANING
 import { Bird, BIRDS, relation } from "./pakshi";
 import { Place } from "./panchang";
 import { Tone } from "./transits";
+import { starRelation, yogiInfo } from "./yogi";
 
 export interface Person {
   id: string;
@@ -374,6 +375,30 @@ export function matchPeople(me: Natal, person: Person): MatchResult {
     status: sameRajju ? "poor" : "good",
     note: `You: ${RAJJU[RAJJU_OF[me.star]]}. ${name}: ${RAJJU[RAJJU_OF[other.star]]}.${sameRajju ? " Same rajju: avoided for marriage; it does not count for work or friendship." : ""}`,
   });
+
+  // ---- Yoga tara: is their birth star lucky for you, and yours for them? ------------------
+  const yogaLink = (owner: Natal, starOfOther: number, ownerPoss: string, otherPoss: string, dir: "toMe" | "toThem") => {
+    const rel = starRelation(yogiInfo(owner), starOfOther);
+    if (!rel) return;
+    const v = rel === "yoga-tara" ? 3 : rel === "yogi-star" ? 1.5 : rel === "avayoga-tara" ? -2.5 : -1;
+    add({
+      id: `yogatara-${dir}`,
+      group: "Stars",
+      title:
+        rel === "yoga-tara" ? `${otherPoss} star is ${ownerPoss} yoga tara`
+        : rel === "yogi-star" ? `${otherPoss} star belongs to ${ownerPoss} Yogi`
+        : rel === "avayoga-tara" ? `${otherPoss} star is ${ownerPoss} avayoga tara`
+        : `${otherPoss} star belongs to ${ownerPoss} Avayogi`,
+      detail:
+        v > 0
+          ? `${NAKSHATRA[starOfOther].ta} is ${rel === "yoga-tara" ? "the star of the yogi point" : "a star of the Yogi"}: luck tends to rise after this person arrives.`
+          : `${NAKSHATRA[starOfOther].ta} is ${rel === "avayoga-tara" ? "the star of the avayogi point" : "a star of the Avayogi"}: plans slow down around this person.`,
+      toMe: dir === "toMe" ? v : 0,
+      toThem: dir === "toThem" ? v : 0,
+    });
+  };
+  yogaLink(me, other.star, "your", `${name}'s`, "toMe");
+  yogaLink(other, me.star, `${name}'s`, "Your", "toThem");
 
   // ---- Birds -----------------------------------------------------------------------------
   const myBird = me.bird as Bird;

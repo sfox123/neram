@@ -17,6 +17,7 @@ import {
   houseFrom,
 } from "./constants";
 import { ashtakavarga, savGrade } from "./ashtaka";
+import { starRelation, YogiInfo, yogiInfo } from "./yogi";
 import { functionalRole, Natal, ordinal, rulesText } from "./chart";
 import { runningDasha, RunningDasha } from "./dasha";
 import { allPositions, Positions } from "./ephemeris";
@@ -105,6 +106,8 @@ export interface DayContext {
   useLagna: boolean;
   /** Sarvashtakavarga points per sign; null until the birth time is known. */
   sav: number[] | null;
+  /** Yogi, avayogi, karana nathan and the standing they give each planet. */
+  yogi: YogiInfo;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -121,6 +124,7 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     dasha: runningDasha(natal.mahas, mid),
     useLagna: natal.profile.timeConfirmed,
     sav: natal.profile.timeConfirmed ? ashtakavarga(natal).sav : null,
+    yogi: yogiInfo(natal),
   };
 }
 
@@ -470,6 +474,94 @@ function savFactor(ctx: DayContext, moonSign: number): Factor[] {
   ];
 }
 
+// Yogi and avayogi: the Moon's star, the hora lord's standing, and planets crossing the
+// yoga tara or the avayoga tara.
+const BENEFICS: PlanetId[] = ["Ju", "Ve", "Me"];
+function yogiFactors(ctx: DayContext, star: Span<number>, hora: Span<PlanetId>): Factor[] {
+  const y = ctx.yogi;
+  const tz = ctx.frame.place.tz;
+  const out: Factor[] = [];
+  const yogiName = PLANET_INFO[y.yogi].ta;
+  const avaName = PLANET_INFO[y.avayogi].ta;
+
+  const rel = starRelation(y, star.value);
+  const starName = NAKSHATRA[star.value].ta;
+  if (rel === "yoga-tara")
+    out.push({
+      id: "yogi-moon",
+      source: "Yogi",
+      title: `Moon in your yoga tara, ${starName}`,
+      detail: `The Moon is crossing ${starName}, the star of your yogi point, until ${fmtTime(star.end, tz)}. These are your luckiest hours of the month: begin, ask and receive.`,
+      tone: "good",
+      effect: eff(8, { money: 10, start: 9 }),
+    });
+  else if (rel === "yogi-star")
+    out.push({
+      id: "yogi-moon",
+      source: "Yogi",
+      title: `Moon in ${starName}, a star of your Yogi`,
+      detail: `${starName} is ruled by ${yogiName}, your Yogi, so the day leans your way. Until ${fmtTime(star.end, tz)}.`,
+      tone: "good",
+      effect: eff(4, { money: 5 }),
+    });
+  else if (rel === "avayoga-tara")
+    out.push({
+      id: "yogi-moon",
+      source: "Avayogi",
+      title: `Moon in your avayoga tara, ${starName}`,
+      detail: `The Moon is crossing ${starName}, the star of your avayogi point, until ${fmtTime(star.end, tz)}. Efforts meet a brake: keep to routine and hold new starts and money decisions.`,
+      tone: "bad",
+      effect: eff(-7, { start: -9, money: -8 }),
+    });
+  else if (rel === "avayogi-star")
+    out.push({
+      id: "yogi-moon",
+      source: "Avayogi",
+      title: `Moon in ${starName}, a star of your Avayogi`,
+      detail: `${starName} is ruled by ${avaName}, your Avayogi, so things move with some drag. Until ${fmtTime(star.end, tz)}.`,
+      tone: "bad",
+      effect: eff(-3, { money: -4 }),
+    });
+
+  // The hora lord carries its birth standing into its hour.
+  const st = y.standing[hora.value];
+  if (st.boost !== 0) {
+    const v = st.boost * 2;
+    out.push({
+      id: "yogi-hora",
+      source: st.boost > 0 ? "Yogi" : "Avayogi",
+      title: `${PLANET_INFO[hora.value].ta} ${st.reasons[0]}`,
+      detail: `In your chart ${PLANET_INFO[hora.value].en} ${st.reasons.join(" and ")}, so its hora counts for ${st.boost > 0 ? "more" : "less"} than it would for someone else. Until ${fmtTime(hora.end, tz)}.`,
+      tone: v > 0 ? "good" : "bad",
+      effect: eff(v, { money: v + (hora.value === y.yogi ? 2 : 0) }),
+    });
+  }
+
+  // Other planets sitting on the two stars today.
+  let total = 0;
+  for (const p of ["Su", "Ma", "Me", "Ju", "Ve", "Sa", "Ra", "Ke"] as PlanetId[]) {
+    const s = Math.floor(ctx.positions[p] / (360 / 27));
+    const favourable = BENEFICS.includes(p) || p === y.yogi || p === y.sahayogi;
+    let v = 0;
+    if (s === y.yogiStar) v = favourable ? 4 : p === "Su" ? 2 : 1;
+    else if (s === y.avayogiStar) v = favourable ? -2 : -3;
+    if (v === 0 || Math.abs(total + v) > 8) continue;
+    total += v;
+    out.push({
+      id: `yogi-transit-${p}`,
+      source: v > 0 ? "Yogi" : "Avayogi",
+      title: `${PLANET_INFO[p].ta} is in your ${v > 0 ? "yoga" : "avayoga"} tara`,
+      detail:
+        v > 0
+          ? `${PLANET_INFO[p].en} is transiting ${NAKSHATRA[y.yogiStar].ta}, your yoga tara. ${favourable ? "A favourable planet here gives with full weight" : "Even a hard planet is made useful here"}: ${PLANET_INFO[p].karaka.split(",").slice(0, 2).join(" and ")} go well for these weeks.`
+          : `${PLANET_INFO[p].en} is transiting ${NAKSHATRA[y.avayogiStar].ta}, your avayoga tara: ${PLANET_INFO[p].karaka.split(",").slice(0, 2).join(" and ")} meet delays until it moves on.`,
+      tone: v > 0 ? "good" : "bad",
+      effect: eff(v),
+    });
+  }
+  return out;
+}
+
 // The sign rising at the moment (the muhurtha lagna), judged from the birth lagna and rasi.
 function risingFactors(ctx: DayContext, rising: Span<number>): Factor[] {
   if (!ctx.useLagna) return [];
@@ -569,6 +661,13 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
       for (const k of KEYS) e[k] += v;
       if (n.rules[lord].includes(2) || n.rules[lord].includes(11)) { e.money += 3; notes.push(`${PLANET_INFO[lord].en} is a money lord`); }
       if (n.rules[lord].includes(10)) { e.work += 2; e.apply += 2; notes.push(`${PLANET_INFO[lord].en} rules your career house`); }
+      // Yogi scheme: periods of the Yogi, the Sahayogi and planets in the yoga tara give more;
+      // those of the Avayogi and planets in its stars give less.
+      const st = ctx.yogi.standing[lord];
+      if (st.boost !== 0) {
+        for (const k of KEYS) e[k] += st.boost * 1.5;
+        notes.push(`${PLANET_INFO[lord].en} ${st.reasons.join(" and ")}`);
+      }
     }
     if (KEYS.some((k) => e[k] !== 0))
       out.push({
@@ -608,6 +707,7 @@ export function readAt(ctx: DayContext, t: Date): Reading {
     ...moonFactors(ctx, { tithi, star, yoga, karana, moonSign, tara, chandra }),
     ...risingFactors(ctx, rising),
     ...savFactor(ctx, moonSign),
+    ...yogiFactors(ctx, star, hora),
     ...chartFactors(ctx, naadi),
   ];
 

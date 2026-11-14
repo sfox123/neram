@@ -6,6 +6,7 @@ import { Natal, ordinal } from "./chart";
 import { DashaPeriod, subPeriods } from "./dasha";
 import { DayFrame, panchangFor, spanAt } from "./panchang";
 import { chandraBala, taraBala, Tone, upcomingIngresses, Ingress } from "./transits";
+import { starRelation, yogiInfo } from "./yogi";
 
 export interface MoneySignal {
   tone: Tone;
@@ -67,6 +68,12 @@ export function moneyDay(n: Natal, frame: DayFrame): MoneyDay {
   for (const k of ["Ju", "Ve"] as PlanetId[]) {
     if (signOf(n.positions[k]) === moonSign) add(1.2, `Moon passes over your natal ${PLANET_INFO[k].en}, a natural significator of wealth.`);
   }
+
+  const rel = starRelation(yogiInfo(n), star);
+  if (rel === "yoga-tara") add(2.5, `Moon in ${NAKSHATRA[star].ta}, your yoga tara: the month's best day for receiving.`);
+  else if (rel === "yogi-star") add(1.2, `Moon in ${NAKSHATRA[star].ta}, a star of your Yogi.`);
+  else if (rel === "avayoga-tara") add(-2, `Moon in ${NAKSHATRA[star].ta}, your avayoga tara: money gets stuck today.`);
+  else if (rel === "avayogi-star") add(-1, `Moon in ${NAKSHATRA[star].ta}, a star of your Avayogi.`);
 
   const tara = taraBala(n.star, star);
   const taraW = [0, 2.5, -1.5, 1, -1.5, 1.5, -2.5, 1, 1][tara.index];

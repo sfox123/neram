@@ -11,6 +11,7 @@ const NAV = [
   { href: "/saram", label: "Saram (breath)", tamil: "சரம்" },
   { href: "/pakshi", label: "Pancha Pakshi", tamil: "பட்சி" },
   { href: "/dasa", label: "Dasa", tamil: "தசை" },
+  { href: "/yogi", label: "Yogi and avayogi", tamil: "யோகி" },
   { href: "/sky", label: "Chart and transits", tamil: "கோசாரம்" },
   { href: "/money", label: "Money", tamil: "தனம்" },
   { href: "/people", label: "People", tamil: "கூட்டு" },
