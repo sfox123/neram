@@ -18,13 +18,15 @@ interface Props {
   lagnaSign?: number | null;
   retro?: Partial<Record<PlanetId, boolean>>;
   highlightSign?: number | null;
+  /** Text on the lagna badge; defaults to Lagna. */
+  lagnaLabel?: string;
   /** For amsa charts: the sign each planet falls in, used instead of its longitude. */
   signs?: Record<PlanetId, number>;
   /** A small mark after a planet: up (exalted or own), down (debilitated), same (same sign as rasi). */
   marks?: Partial<Record<PlanetId, ("up" | "down" | "same")[]>>;
 }
 
-export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highlightSign, signs, marks }: Props) {
+export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highlightSign, signs, marks, lagnaLabel = "Lagna" }: Props) {
   return (
     <div className="grid aspect-square w-full max-w-[26rem] grid-cols-4 grid-rows-4 border border-ink/70 bg-paper text-[0.8rem]">
       {RASI.map((r, sign) => {
@@ -40,8 +42,8 @@ export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highli
             <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[0.7rem] leading-none text-mute">
               {r.ta}
               {isLagna && (
-                <span className="rounded-sm bg-deep px-1 text-[0.65rem] font-semibold leading-4 text-paper" title="Lagna">
-                  Lagna
+                <span className="rounded-sm bg-deep px-1 text-[0.65rem] font-semibold leading-4 text-paper" title={lagnaLabel}>
+                  {lagnaLabel}
                 </span>
               )}
             </span>

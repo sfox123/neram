@@ -208,6 +208,12 @@ function SetupForm() {
             how close your recorded minute is to a change and reads both sides when it is within two minutes.
           </p>
           <p>
+            <strong>Indu lagna.</strong> Add the kalas of the 9th lord from the lagna and the 9th lord from the Moon (Sun 30, Moon 16, Mars 6, Mercury
+            8, Jupiter 10, Venus 12, Saturn 1), cast out twelves and count the remainder from the Moon. The sign is read as a lagna for money: planets in
+            it, looking at it or in its kendras and trines produce wealth; those in the 3rd, 6th, 8th and 12th thin it. A bhukti or antaram lord&rsquo;s
+            place from it moves the money score by up to 2 points, and the Moon, Guru or Sukran crossing it adds to the daily money signals.
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -255,6 +261,8 @@ function SetupForm() {
             ["Vargottama degrees and limits (Vedic Marga)", "https://vedicmarga.com/vargottama-calculator/"],
             ["Dasamsa: calculation and how to read it (Jagannatha Hora)", "https://jagannathhora.com/?p=1246"],
             ["Dasamsa: reading signatures against the rasi chart (Jagannatha Hora)", "https://jagannathhora.com/d10-chart-career-reading-examples/"],
+            ["Indu lagna: the Uttara Kalamrita calculation, step by step (PanchangBodh)", "https://panchangbodh.com/indu-lagna-calculator"],
+            ["Indu lagna: reading the lord, occupants and wealth-producing places (Vaya)", "https://vaya.so/blog/indu-lagna-il"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],

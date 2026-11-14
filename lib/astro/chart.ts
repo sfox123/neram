@@ -96,7 +96,7 @@ export function buildNatal(profile: Profile): Natal {
 
 // Indu lagna, the wealth ascendant: add the "kalas" of the 9th lords from lagna and Moon,
 // cast out twelves, and count that many signs from the Moon.
-const KALA: Partial<Record<PlanetId, number>> = { Su: 30, Mo: 16, Ma: 6, Me: 8, Ju: 10, Ve: 12, Sa: 1 };
+export const KALA: Partial<Record<PlanetId, number>> = { Su: 30, Mo: 16, Ma: 6, Me: 8, Ju: 10, Ve: 12, Sa: 1 };
 function induLagna(lagnaSign: number, moonSign: number): number {
   const ninthLord = (from: number) => RASI[(from + 8) % 12].lord;
   const total = (KALA[ninthLord(lagnaSign)] ?? 0) + (KALA[ninthLord(moonSign)] ?? 0);

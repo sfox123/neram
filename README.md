@@ -37,7 +37,7 @@ It deploys to Vercel as a plain Next.js app with no configuration.
 | Yogas | Pancha Mahapurusha, raja, dhana and other yogas found in your chart; how each is formed, what weakens or helps it, when its planets' periods switch it on, how to use it |
 | Strengthen and recover | What is weighing on this hour or day and its fix, a reset routine for a bad day, and each planet's practice (strengthen, settle or honour) ranked by need |
 | Chart and transits | Birth chart, today's sky, Chandra Naadi, planets crossing natal planets, gochara, Elarai Sani, Ashtakavarga, sign changes ahead |
-| Money | 30-day money signals, best money hours today, your money lords and Indu lagna, dasa periods and slow transits tied to income |
+| Money | 30-day money signals, best money hours today, your money lords, the Indu lagna read in full (working, chart from it, each planet's role, periods and transits), dasa periods and slow transits tied to income |
 | Find a time | Pick an activity and a range (3 to 30 days); lists the strongest windows ranked, and day by day |
 | Saram (breath) | Tell it which nostril is flowing; do's and don'ts, and how the breath sits with the time verdict |
 | People | Add someone's birth details; what the two charts do to each other (poruthams, Guru's sight, chart overlay, bird friendship) |
@@ -57,6 +57,7 @@ lib/astro/
   ashtaka.ts     Ashtakavarga points per sign
   yogi.ts        yogi and avayogi points, karana nathan, HD and LD planets
   dignity.ts     exaltation, own sign, friendships, planetary sight, combustion
+  indu.ts        Indu lagna: working, reading, wealth-producing planets, transits over it
   vargas.ts      navamsa and dasamsa signs, vargottama, amsa strength, birth-minute sensitivity, readings
   yogas.ts       yoga detection, activation by dasa periods, Guru and Sani triggers
   dashaTransit.ts  the dasa, bhukti and antaram lords judged in the current sky

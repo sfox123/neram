@@ -4,6 +4,7 @@
 // The weights are a judgement about how much each tradition should count. They are kept
 // in one place (this file) so they are easy to read and change.
 
+import { InduReading, induReading, induWeight } from "./indu";
 import { VargaStrength, vargaStrength } from "./vargas";
 import { DashaGocharam, dashaGocharam } from "./dashaTransit";
 import {
@@ -114,6 +115,8 @@ export interface DayContext {
   gocharam: DashaGocharam | null;
   /** Navamsa and dasamsa strength of each birth planet. */
   amsa: Record<PlanetId, VargaStrength> | null;
+  /** The Indu lagna (wealth ascendant) reading. */
+  indu: InduReading | null;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -136,6 +139,7 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     yogi,
     gocharam: useLagna && dasha ? dashaGocharam(natal, yogi, dasha, positions, mid) : null,
     amsa: useLagna ? vargaStrength(natal) : null,
+    indu: useLagna ? induReading(natal) : null,
   };
 }
 
@@ -678,6 +682,14 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
       if (st.boost !== 0) {
         for (const k of KEYS) e[k] += st.boost * 1.5;
         notes.push(`${PLANET_INFO[lord].en} ${st.reasons.join(" and ")}`);
+      }
+      // Indu lagna: a period lord well placed from the wealth ascendant helps money; one in a thinning place holds it back.
+      if (ctx.indu) {
+        const w = induWeight(ctx.indu, lord);
+        const v = Math.max(-1, Math.min(2, w * 0.75));
+        e.money += v;
+        if (lord === ctx.indu.lord) { e.money += 1; notes.push(`${PLANET_INFO[lord].en} is lord of your Indu lagna`); }
+        else if (w >= 2) notes.push(`${PLANET_INFO[lord].en} sits well from your Indu lagna`);
       }
       // Amsa strength: navamsa backs the period as a whole, dasamsa backs its work.
       const am = ctx.amsa?.[lord];

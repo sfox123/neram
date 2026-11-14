@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { RasiChart } from "@/components/RasiChart";
 import { useStore, useToday } from "@/components/store";
-import { H2, Loading, PageTitle, TierTag, ToneDot } from "@/components/ui";
+import { H2, LineList, Loading, PageTitle, TierTag, ToneDot } from "@/components/ui";
 import { ordinal, rulesText } from "@/lib/astro/chart";
-import { PLANET_INFO, RASI, signOf } from "@/lib/astro/constants";
+import { houseFrom, PLANET_INFO, PlanetId, RASI, signOf } from "@/lib/astro/constants";
+import { runningDasha } from "@/lib/astro/dasha";
+import { induReading, induTransits, InduWord, ROLE_LABEL } from "@/lib/astro/indu";
 import { dayFrame } from "@/lib/astro/panchang";
 import { bestWindows, Tier } from "@/lib/astro/score";
 import { addDaysKey, dateKey, fmtDate, fmtDateLong, fmtTime } from "@/lib/astro/time";
 import { moneyDay, moneyIngresses, moneyLords, moneyPeriods } from "@/lib/astro/wealth";
+import { activation } from "@/lib/astro/yogas";
+
+const INDU_TIER: Record<InduWord, string> = { Rich: "tier-go", Good: "tier-good", Moderate: "tier-steady", Thin: "tier-hold" };
 
 const moneyTier = (score: number): Tier => (score >= 72 ? "go" : score >= 60 ? "good" : score >= 43 ? "steady" : score >= 30 ? "hold" : "avoid");
 
@@ -28,6 +34,14 @@ export default function MoneyPage() {
     const t = new Date();
     return { periods: moneyPeriods(natal, t), ingresses: moneyIngresses(natal, t) };
   }, [todayKey, natal]);
+
+  const indu = useMemo(() => {
+    if (!todayKey || !profile.timeConfirmed) return null;
+    const t = new Date();
+    const reading = induReading(natal, runningDasha(natal.mahas, t));
+    const key = [reading.lord, ...reading.producers, ...reading.supports].filter((p, i, a) => p !== "Ra" && p !== "Ke" && a.indexOf(p) === i);
+    return { reading, transits: induTransits(natal, t), timing: key.map((p) => ({ planet: p, act: activation(natal, [p], t) })) };
+  }, [todayKey, natal, profile.timeConfirmed]);
 
   if (!ready || !today || !days.length || !longRun) return <Loading />;
   const tz = profile.here.tz;
@@ -157,7 +171,11 @@ export default function MoneyPage() {
             <div>
               <dt className="text-sm text-mute">Indu lagna, wealth point</dt>
               <dd className="mt-1">
-                <strong>{RASI[natal.induLagna].ta}</strong>. Days when the Moon crosses it, and months when Guru or Sukran do, favour receipts.
+                <strong>{RASI[natal.induLagna].ta}</strong>. Read in full{" "}
+                <a href="#indu" className="underline">
+                  below
+                </a>
+                .
               </dd>
             </div>
             <div>
@@ -171,6 +189,132 @@ export default function MoneyPage() {
           <p className="border-t border-line pt-4 text-[0.95rem] text-mute">Your 2nd and 11th lords depend on the lagna, which needs your birth time.</p>
         )}
       </section>
+
+      {indu && (
+        <section className="mt-14 scroll-mt-6" id="indu">
+          <H2 aside={`${RASI[indu.reading.sign].ta}, your ${ordinal(houseFrom(natal.lagnaSign, indu.reading.sign))} house`}>Indu lagna: your wealth ascendant</H2>
+          <div className="grid gap-px overflow-hidden rounded-md bg-line lg:grid-cols-[1fr_1.35fr]">
+            <div className={`${INDU_TIER[indu.reading.word]} p-6 sm:p-7`}>
+              <p className="opacity-85">The reading from {RASI[indu.reading.sign].ta}</p>
+              <p className="verdict-word mt-2 text-6xl leading-none">{indu.reading.word}</p>
+              <p className="mt-4 max-w-[40ch] text-[1.02rem] opacity-90">{indu.reading.summary}</p>
+            </div>
+            <div className="bg-paper p-6 sm:p-7">
+              <p className="text-mute">How it is found</p>
+              <ol className="mt-3 space-y-2 text-[0.98rem]">
+                {[
+                  `The 9th from your lagna is ${RASI[indu.reading.working.ninthFromLagna].ta}. Its lord ${PLANET_INFO[indu.reading.working.lordA].ta} carries ${indu.reading.working.kalaA} kalas.`,
+                  `The 9th from your Moon is ${RASI[indu.reading.working.ninthFromMoon].ta}. Its lord ${PLANET_INFO[indu.reading.working.lordB].ta} carries ${indu.reading.working.kalaB} kalas.`,
+                  `${indu.reading.working.kalaA} + ${indu.reading.working.kalaB} = ${indu.reading.working.sum}. Divided by 12, the remainder is ${indu.reading.working.remainder}.`,
+                  `Counting ${RASI[natal.moonSign].ta}, your Moon sign, as the first, the ${ordinal(indu.reading.working.remainder)} sign is ${RASI[indu.reading.sign].ta}.`,
+                ].map((step, i) => (
+                  <li key={step} className="grid grid-cols-[1.4rem_1fr] gap-2">
+                    <span className="font-semibold tabular-nums text-peacock">{i + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-3 text-sm text-mute">Kalas: Suriyan 30, Chandran 16, Sevvai 6, Budhan 8, Guru 10, Sukran 12, Sani 1.</p>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-x-12 gap-y-8 xl:grid-cols-[26rem_1fr]">
+            <RasiChart title="From Indu lagna" subtitle="read for money only" positions={natal.positions} lagnaSign={indu.reading.sign} lagnaLabel="Indu" retro={natal.retro} highlightSign={indu.reading.sign} />
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[30rem] border-collapse text-[0.95rem]">
+                <thead>
+                  <tr className="border-y border-line text-left text-sm text-mute">
+                    <th className="py-2 pr-3 font-normal">Planet</th>
+                    <th className="py-2 pr-3 font-normal">Place from it</th>
+                    <th className="py-2 pr-3 font-normal">Role for money</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...indu.reading.planets]
+                    .sort((a, b) => b.weight - a.weight)
+                    .map((x) => (
+                      <tr key={x.planet} className="border-b border-line">
+                        <th scope="row" className="py-2 pr-3 text-left font-semibold">
+                          {PLANET_INFO[x.planet].ta}
+                          {x.planet === indu.reading.lord && <span className="ml-2 font-normal text-peacock">its lord</span>}
+                        </th>
+                        <td className="py-2 pr-3">
+                          {ordinal(x.house)}, {RASI[x.sign].ta}
+                          {x.planet !== "Ra" && x.planet !== "Ke" && (x.dignity === "exalted" || x.dignity === "own" || x.dignity === "debilitated") && (
+                            <span className={`ml-1.5 text-sm font-semibold ${x.dignity === "debilitated" ? "text-avoid" : "text-go"}`}>{x.dignity === "own" ? "own sign" : x.dignity}</span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-3">
+                          <span className="inline-flex items-baseline gap-2">
+                            <ToneDot tone={x.weight >= 1.5 ? "good" : x.weight < 0 ? "bad" : "neutral"} />
+                            {ROLE_LABEL[x.role]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <LineList lines={indu.reading.lines} />
+          </div>
+
+          <div className="mt-10 grid gap-x-12 gap-y-10 lg:grid-cols-2">
+            <div>
+              <h3 className="display text-xl">Periods that carry it</h3>
+              <ul className="mt-3 border-t border-line text-[0.95rem]">
+                {indu.timing.map(({ planet, act }) => {
+                  const next = act.upcoming.slice(0, 2);
+                  const name = (p: PlanetId) => PLANET_INFO[p].ta;
+                  return (
+                    <li key={planet} className="border-b border-line py-3">
+                      <strong>{name(planet)}</strong>
+                      <span className="text-mute">
+                        {planet === indu.reading.lord ? ", lord of the Indu lagna" : indu.reading.producers.includes(planet) ? ", wealth-producing" : ", support"}
+                      </span>
+                      <ul className="mt-1 space-y-0.5 tabular-nums">
+                        {act.runningNow.map((r) => (
+                          <li key={r.level + r.period.start.getTime()}>
+                            <span className="font-semibold text-go">Now:</span> {r.level} until {fmtDateLong(r.period.end, tz)}
+                          </li>
+                        ))}
+                        {next.map((u) => (
+                          <li key={u.level + u.period.start.getTime()}>
+                            {name(u.period.lord)} {u.level}
+                            {u.level !== "dasa" && <span className="text-mute"> in {name(u.within)}</span>}: {fmtDateLong(u.period.start, tz)} to {fmtDateLong(u.period.end, tz)}
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div>
+              <h3 className="display text-xl">Planets crossing or looking at it</h3>
+              <ul className="mt-3 border-t border-line text-[0.95rem]">
+                {indu.transits.map((t) => (
+                  <li key={t.planet + t.start.getTime()} className="grid grid-cols-[auto_1fr] gap-x-3 border-b border-line py-3">
+                    <ToneDot tone={t.tone} />
+                    <span>
+                      <span className="tabular-nums">
+                        {t.live ? <span className="font-semibold text-go">Now</span> : fmtDateLong(t.start, tz)} to {fmtDateLong(t.end, tz)}
+                      </span>
+                      <span className="block text-mute">{t.text}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p className="mt-4 max-w-[72ch] text-sm text-mute">
+            The method is from Kalidasa&rsquo;s Uttara Kalamrita. It is one measure of money among several on this page: your 2nd and 11th lords and the
+            dhana yogas on the Yogas page are read separately, and a moderate Indu lagna does not cancel them.
+          </p>
+        </section>
+      )}
 
       <div className="mt-12 grid gap-x-12 gap-y-12 lg:grid-cols-2">
         <section>

@@ -108,3 +108,20 @@ export function DateStepper({ value, onChange, todayKey }: { value: string; onCh
     </div>
   );
 }
+
+/** A list of titled findings, each with a tone dot. Used by the amsa and Indu lagna readings. */
+export function LineList({ lines, stacked = false }: { lines: { title: string; detail: string; tone: "good" | "bad" | "neutral" }[]; stacked?: boolean }) {
+  return (
+    <ul className="border-t border-line">
+      {lines.map((l) => (
+        <li key={l.title} className={`grid gap-x-8 gap-y-1 border-b border-line py-4 ${stacked ? "" : "md:grid-cols-[17rem_1fr]"}`}>
+          <span className="flex items-baseline gap-2 font-semibold">
+            <span aria-hidden className={`inline-block h-2 w-2 shrink-0 translate-y-[-1px] rounded-full ${l.tone === "good" ? "bg-go" : l.tone === "bad" ? "bg-avoid" : "bg-ink/25"}`} />
+            {l.title}
+          </span>
+          <span className="max-w-[68ch] text-[0.98rem] text-mute">{l.detail}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}

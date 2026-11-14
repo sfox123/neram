@@ -4,8 +4,11 @@
 import { houseFrom, NAKSHATRA, DASHA_ORDER, PLANET_INFO, PlanetId, RASI, signOf, WEEKDAY_LORD } from "./constants";
 import { Natal, ordinal } from "./chart";
 import { DashaPeriod, subPeriods } from "./dasha";
+import { aspects } from "./dignity";
+import { siderealLongitude } from "./ephemeris";
 import { DayFrame, panchangFor, spanAt } from "./panchang";
 import { chandraBala, taraBala, Tone, upcomingIngresses, Ingress } from "./transits";
+import { induReading } from "./indu";
 import { starRelation, yogiInfo } from "./yogi";
 
 export interface MoneySignal {
@@ -64,6 +67,12 @@ export function moneyDay(n: Natal, frame: DayFrame): MoneyDay {
     const dayLord = WEEKDAY_LORD[frame.weekday];
     if (dayLord === second || dayLord === eleventh) add(1, `${PLANET_INFO[dayLord].en}'s weekday; ${PLANET_INFO[dayLord].en} is one of your money lords.`);
     if (n.induLagna === moonSign) add(2, `Moon crosses your Indu lagna (${RASI[n.induLagna].ta}), the wealth ascendant.`);
+    // Slow benefics on the Indu lagna colour the whole stretch they stay.
+    const guru = signOf(siderealLongitude("Ju", mid));
+    const sukran = signOf(siderealLongitude("Ve", mid));
+    if (guru === n.induLagna) add(1.5, "Guru is crossing your Indu lagna: the strongest transit for money in that method.");
+    else if (aspects("Ju", guru, n.induLagna)) add(0.8, "Guru is looking at your Indu lagna.");
+    if (sukran === n.induLagna) add(1, "Sukran is crossing your Indu lagna: good weeks for receipts.");
   }
   for (const k of ["Ju", "Ve"] as PlanetId[]) {
     if (signOf(n.positions[k]) === moonSign) add(1.2, `Moon passes over your natal ${PLANET_INFO[k].en}, a natural significator of wealth.`);
@@ -100,6 +109,7 @@ export interface MoneyPeriod {
 export function moneyPeriods(n: Natal, from: Date, years = 4): MoneyPeriod[] {
   if (!n.profile.timeConfirmed) return [];
   const out: MoneyPeriod[] = [];
+  const indu = induReading(n);
   const end = from.getTime() + years * 365.25 * 86400000;
   const why = (lord: PlanetId): string[] => {
     const r: string[] = [];
@@ -110,6 +120,8 @@ export function moneyPeriods(n: Natal, from: Date, years = 4): MoneyPeriod[] {
     if (rules.includes(5)) r.push("5th lord (merit, speculation)");
     if (rules.includes(10)) r.push("10th lord (career)");
     if ([2, 11].includes(n.house[lord])) r.push(`sits in your ${ordinal(n.house[lord])} house`);
+    if (lord === indu.lord) r.push("lord of your Indu lagna");
+    if (indu.producers.includes(lord)) r.push("sits well from your Indu lagna");
     return r;
   };
   for (const maha of n.mahas) {
@@ -117,11 +129,11 @@ export function moneyPeriods(n: Natal, from: Date, years = 4): MoneyPeriod[] {
     for (const bh of subPeriods(maha)) {
       if (bh.end.getTime() < from.getTime() || bh.start.getTime() > end) continue;
       const rb = why(bh.lord);
-      if (rb.some((x) => x.startsWith("2nd") || x.startsWith("11th") || x.startsWith("sits"))) out.push({ period: bh, parent: maha, reasons: rb });
+      if (rb.some((x) => x.startsWith("2nd") || x.startsWith("11th") || x.startsWith("sits") || x.startsWith("lord of your Indu"))) out.push({ period: bh, parent: maha, reasons: rb });
       for (const an of subPeriods(bh)) {
         if (an.end.getTime() < from.getTime() || an.start.getTime() > from.getTime() + 548 * 86400000) continue;
         const ra = why(an.lord);
-        if (ra.some((x) => x.startsWith("2nd") || x.startsWith("11th") || x.startsWith("sits"))) out.push({ period: an, parent: bh, reasons: ra });
+        if (ra.some((x) => x.startsWith("2nd") || x.startsWith("11th") || x.startsWith("sits") || x.startsWith("lord of your Indu"))) out.push({ period: an, parent: bh, reasons: ra });
       }
     }
   }

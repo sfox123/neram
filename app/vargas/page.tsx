@@ -4,12 +4,11 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { RasiChart } from "@/components/RasiChart";
 import { useStore } from "@/components/store";
-import { H2, Loading, PageTitle } from "@/components/ui";
+import { H2, LineList, Loading, PageTitle } from "@/components/ui";
 import { PLANET_INFO, PlanetId, PLANETS, RASI } from "@/lib/astro/constants";
 import { Dignity } from "@/lib/astro/dignity";
 import { fmtDateLong, MS_DAY } from "@/lib/astro/time";
 import {
-  AmsaLine,
   buildVarga,
   dasamsaReading,
   lagnaWindow,
@@ -47,22 +46,6 @@ function DignityCell({ sign, d, node }: { sign: number; d: Dignity; node: boolea
       {RASI[sign].ta}
       {!node && d !== "neutral" && <span className={`ml-1.5 text-sm ${strong ? "font-semibold text-go" : d === "debilitated" ? "font-semibold text-avoid" : "text-mute"}`}>{DIG[d]}</span>}
     </span>
-  );
-}
-
-function Lines({ lines }: { lines: AmsaLine[] }) {
-  return (
-    <ul className="border-t border-line">
-      {lines.map((l) => (
-        <li key={l.title} className="grid gap-x-8 gap-y-1 border-b border-line py-4 md:grid-cols-[17rem_1fr]">
-          <span className="flex items-baseline gap-2 font-semibold">
-            <span aria-hidden className={`inline-block h-2 w-2 shrink-0 translate-y-[-1px] rounded-full ${l.tone === "good" ? "bg-go" : l.tone === "bad" ? "bg-avoid" : "bg-ink/25"}`} />
-            {l.title}
-          </span>
-          <span className="max-w-[68ch] text-[0.98rem] text-mute">{l.detail}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -214,7 +197,7 @@ export default function VargasPage() {
 
       <section className="mt-14">
         <H2 aside={`${RASI[d9.lagnaSign].ta} lagna`}>Who you are inside: the navamsa</H2>
-        <Lines lines={read9} />
+        <LineList lines={read9} />
         <p className="mt-3 max-w-[72ch] text-sm text-mute">
           The navamsa lagna is {RASI[d9.lagnaSign].ta} for any birth between {windowText(w9)}. Your recorded time is{" "}
           {Math.round(w9.secondsBefore / 60)} minutes inside that window on one side and {Math.round(w9.secondsAfter / 60)} on the other
@@ -224,7 +207,7 @@ export default function VargasPage() {
 
       <section className="mt-14">
         <H2 aside={`${RASI[d10.lagnaSign].ta} lagna`}>Your career: the dasamsa</H2>
-        <Lines lines={read10} />
+        <LineList lines={read10} />
 
         <h3 className="display mt-10 text-xl">Your strongest career planets</h3>
         <ul className="mt-3 border-t border-line">
