@@ -354,3 +354,28 @@ export const label = {
   karana: (i: number) => karanaName(i),
   rasi: (i: number) => RASI[i].ta,
 };
+
+// ---- Karana lookups across days ---------------------------------------------------------
+
+/** Vanija karana (Tamil: Vanisai, வணிசை) is the sixth movable karana: index 6, 13, ... 55. */
+export const isVanija = (index0: number) => index0 >= 1 && index0 <= 56 && (index0 - 1) % 7 === 5;
+
+/** The karana span running at `t`. A karana lasts about half a tithi, 9 to 14 hours. */
+export function karanaSpanAt(t: Date): Span<number> {
+  return {
+    start: previousChange(karanaIndex, t, 2 * MS_HOUR, 2 * MS_DAY),
+    end: nextChange(karanaIndex, t, 2 * MS_HOUR, 2 * MS_DAY),
+    value: karanaIndex(t),
+  };
+}
+
+/** The Vanija karana running at `from`, or the next one to begin. One comes round every 3.5 days. */
+export function nextVanija(from: Date): Span<number> {
+  let t = from;
+  let span = karanaSpanAt(t);
+  for (let i = 0; i < 12 && !isVanija(span.value); i++) {
+    t = new Date(span.end.getTime() + 60000);
+    span = karanaSpanAt(t);
+  }
+  return span;
+}

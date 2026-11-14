@@ -124,3 +124,13 @@ export function fmtDuration(ms: number): string {
 
 export const MS_HOUR = 3600000;
 export const MS_DAY = 86400000;
+
+/** Like fmtDuration, but rolls hours into days past 24 h: "1 day 4 h", "2 days". */
+export function fmtCountdown(ms: number): string {
+  const totalMin = Math.max(0, Math.round(ms / 60000));
+  if (totalMin < 24 * 60) return fmtDuration(ms);
+  const days = Math.floor(totalMin / (24 * 60));
+  const h = Math.floor((totalMin % (24 * 60)) / 60);
+  const d = `${days} day${days === 1 ? "" : "s"}`;
+  return h === 0 ? d : `${d} ${h} h`;
+}

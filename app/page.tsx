@@ -10,9 +10,9 @@ import { NAKSHATRA, PLANET_INFO, RASI, WEEKDAYS_TAMIL } from "@/lib/astro/consta
 import { ordinal } from "@/lib/astro/chart";
 import { runningDasha } from "@/lib/astro/dasha";
 import { ACTIVITY, BIRDS } from "@/lib/astro/pakshi";
-import { label } from "@/lib/astro/panchang";
+import { label, nextVanija } from "@/lib/astro/panchang";
 import { ACTIVITIES, ActivityKey, advice, bestWindows, blocks, readAt, TIER, worstWindows } from "@/lib/astro/score";
-import { fmtDate, fmtDateLong, fmtDuration, fmtTime } from "@/lib/astro/time";
+import { fmtCountdown, fmtDate, fmtDateLong, fmtDuration, fmtTime } from "@/lib/astro/time";
 
 export default function NowPage() {
   const { ready, now, natal, profile } = useStore();
@@ -23,8 +23,9 @@ export default function NowPage() {
 
   const at = picked ?? now;
   const reading = useMemo(() => (day ? readAt(day.ctx, at) : null), [day, at]);
+  const vanija = useMemo(() => (ready ? nextVanija(now) : null), [ready, now]);
 
-  if (!ready || !day || !reading) return <Loading />;
+  if (!ready || !day || !reading || !vanija) return <Loading />;
 
   const tz = profile.here.tz;
   const saram = saramCheck && now.getTime() - saramCheck.at < SARAM_FRESH_MS ? saramCheck : null;
@@ -39,8 +40,42 @@ export default function NowPage() {
   const p = day.ctx.panchang;
   const bird = BIRDS[natal.bird];
 
+  const vanijaOn = now >= vanija.start && now < vanija.end;
+  const vanijaLength = vanija.end.getTime() - vanija.start.getTime();
+  const sameDay = fmtDate(vanija.start, tz) === fmtDate(vanija.end, tz);
+
   return (
     <div>
+      {/* Temple reminder: the next Vanisai karanam */}
+      <aside
+        aria-label="Next Vanisai karanam"
+        className={`mb-5 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 rounded-md border px-5 py-3.5 text-[0.95rem] ${
+          vanijaOn ? "border-go bg-go/10" : "border-line bg-panel"
+        }`}
+      >
+        <p>
+          <span className="font-semibold">Vanisai karanam</span> <span className="tamil text-peacock">வணிசை</span>
+          {vanijaOn ? (
+            <>
+              {" "}is running now, until <strong className="tabular-nums">{fmtTime(vanija.end, tz)}</strong>. Good for the temple.
+            </>
+          ) : (
+            <>
+              {" "}next on <strong className="tabular-nums">{fmtDate(vanija.start, tz)}, {fmtTime(vanija.start, tz)}</strong> to{" "}
+              <strong className="tabular-nums">
+                {sameDay ? "" : `${fmtDate(vanija.end, tz)}, `}
+                {fmtTime(vanija.end, tz)}
+              </strong>
+              . Plan the temple visit then.
+            </>
+          )}
+        </p>
+        <p className="text-mute tabular-nums">
+          {vanijaOn ? `${fmtDuration(vanija.end.getTime() - now.getTime())} left of ${fmtDuration(vanijaLength)}` : `Lasts ${fmtDuration(vanijaLength)}; starts in ${fmtCountdown(vanija.start.getTime() - now.getTime())}`}
+          <span className="ml-2 text-sm">Thirukanitha timing.</span>
+        </p>
+      </aside>
+
       <p className="mb-4 text-[0.95rem] text-mute">
         {fmtDate(now, tz, { weekday: "long", month: "long" })}
         <span className="tamil mx-2 text-ink">{WEEKDAYS_TAMIL[day.frame.weekday]}</span>
