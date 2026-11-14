@@ -5,7 +5,7 @@ import { RasiChart } from "@/components/RasiChart";
 import { useStore, useToday } from "@/components/store";
 import { H2, Loading, PageTitle, ToneDot } from "@/components/ui";
 import { ashtakavarga, savGrade } from "@/lib/astro/ashtaka";
-import { ordinal, rulesText } from "@/lib/astro/chart";
+import { houseTopic, ordinal, rulesText } from "@/lib/astro/chart";
 import { formatDeg, nakOf, NAKSHATRA, padaOf, PLANET_INFO, PLANETS, RASI, signOf } from "@/lib/astro/constants";
 import { allPositions } from "@/lib/astro/ephemeris";
 import { chandraNaadi, contacts, gochara, saturnPhase, taraBala, upcomingIngresses } from "@/lib/astro/transits";
@@ -34,6 +34,7 @@ export default function SkyPage() {
   if (!ready || !data || !day) return <Loading />;
   const tz = profile.here.tz;
   const known = profile.timeConfirmed;
+  const bav = known ? (ashtakavarga(natal).bav as Record<string, number[]>) : null;
   const moonSign = signOf(data.pos.Mo);
 
   return (
@@ -121,12 +122,13 @@ export default function SkyPage() {
       <section className="mt-12">
         <H2 aside={data.saturn.label}>Gochara: where each planet is for you</H2>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[44rem] border-collapse text-[0.95rem]">
+          <table className="w-full min-w-[52rem] border-collapse text-[0.95rem]">
             <thead>
               <tr className="border-y border-line text-left text-sm text-mute">
                 <th className="py-2 pr-3 font-normal">Planet</th>
                 <th className="py-2 pr-3 font-normal">In</th>
                 <th className="py-2 pr-3 font-normal">From your Moon</th>
+                <th className="py-2 pr-3 font-normal">Its points here</th>
                 <th className="py-2 pr-3 font-normal">From lagna</th>
                 <th className="py-2 pr-3 font-normal">Stays until</th>
               </tr>
@@ -144,10 +146,33 @@ export default function SkyPage() {
                   <td className="py-2 pr-3">
                     <span className="inline-flex items-baseline gap-2">
                       <ToneDot tone={g.tone} />
-                      {ordinal(g.fromMoon)}, {g.tone === "good" ? "favourable" : "unfavourable"}
+                      {ordinal(g.fromMoon)}, {g.tone === "good" ? "a helping place" : "not a helping place"}
                     </span>
                   </td>
-                  <td className="py-2 pr-3">{known ? ordinal(g.fromLagna) : "set birth time"}</td>
+                  <td className="py-2 pr-3 tabular-nums">
+                    {bav ? (
+                      (() => {
+                        const pts = bav[g.planet === "Ra" ? "Sa" : g.planet === "Ke" ? "Ma" : g.planet][g.sign];
+                        return (
+                          <span className="inline-flex items-baseline gap-2">
+                            <ToneDot tone={pts >= 5 ? "good" : pts >= 4 ? "neutral" : "bad"} />
+                            {pts} of 8 <span className="text-mute">{pts >= 5 ? "strong" : pts >= 4 ? "fair" : "low"}</span>
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-mute">set birth time</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-3">
+                    {known ? (
+                      <>
+                        {ordinal(g.fromLagna)} <span className="text-mute">{houseTopic(g.fromLagna).split(/[,;]/)[0]}</span>
+                      </>
+                    ) : (
+                      "set birth time"
+                    )}
+                  </td>
                   <td className="py-2 pr-3 tabular-nums text-mute">
                     {g.until.getTime() - now.getTime() < 3 * MS_DAY ? `${fmtDateLong(g.until, tz)}, ${fmtTime(g.until, tz)}` : fmtDateLong(g.until, tz)}
                   </td>
@@ -158,6 +183,13 @@ export default function SkyPage() {
         </div>
         <p className="mt-3 max-w-[72ch] text-[0.95rem]">
           <strong>{data.saturn.label}.</strong> {data.saturn.note}
+        </p>
+        <p className="mt-3 max-w-[72ch] text-sm text-mute">
+          Read the two dots together. The Moon column is the classical rule: each planet has a fixed list of helping places counted from your birth
+          Moon, and the Sun, Sevvai, Sani and the nodes have only three or four each, so most rows are red on an ordinary day. The points column is the
+          planet&rsquo;s own Ashtakavarga score in the sign it is crossing (Rahu is read through Sani, Ketu through Sevvai). A planet outside its helping
+          places but with five or more points still works for you, through the lagna house shown beside it. Only your period lords carry these marks
+          into the scores.
         </p>
       </section>
 
