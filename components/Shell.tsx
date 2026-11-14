@@ -19,6 +19,7 @@ const NAV = [
   { href: "/sky", label: "Chart and transits", tamil: "கோசாரம்" },
   { href: "/money", label: "Money", tamil: "தனம்" },
   { href: "/travel", label: "Travel abroad", tamil: "வெளிநாடு" },
+  { href: "/marriage", label: "Marriage", tamil: "திருமணம்" },
   { href: "/people", label: "People", tamil: "கூட்டு" },
   { href: "/setup", label: "Setup and method", tamil: "அமைப்பு" },
 ];
@@ -30,7 +31,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-[1320px] flex-col lg:flex-row">
-      <header className="shrink-0 border-line lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:border-r lg:py-8 lg:pl-8 lg:pr-6">
+      <header className="shrink-0 border-line lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:py-8 lg:pl-8 lg:pr-6">
         <div className="flex items-baseline justify-between px-5 pt-5 lg:block lg:px-0 lg:pt-0">
           <Link href="/" className="block">
             <span className="flex items-center gap-2">

@@ -223,6 +223,15 @@ function SetupForm() {
             Saturday east, Tuesday and Wednesday north, Thursday south).
           </p>
           <p>
+            <strong>Marriage.</strong> The promise is scored from Sukran (the significator in a man&rsquo;s chart), the 7th lord and house, the 2nd
+            house and the 7th of the navamsa. Delay marks are counted separately: Sani&rsquo;s sight on the 7th, its lord or Sukran, the nodes across
+            the lagna and 7th, a 7th lord in the 6th, 8th or 12th, and Sevvai on the 7th. Timing adds the periods of the 7th lord, planets in the 7th,
+            Sukran and the planets tied to them to the transits of Guru and Sani over the 7th house, its lord, Sukran and the lagna, with extra weight
+            for the double transit and for Guru balam (Guru in the 2nd, 5th, 7th, 9th or 11th from the Moon). Each moment is ranked against your years
+            from 21 to 45. Sevvai dosham is checked from lagna, Moon and Sukran in the 1st, 2nd, 4th, 7th, 8th and 12th, and counted as cancelled when
+            Sevvai is exalted or in its own sign, or joined or seen by Guru or Budhan.
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -277,6 +286,10 @@ function SetupForm() {
             ["Videsh yog: the ten checks, including the 4th house and lagna-lord ties (PanchangBodh)", "https://panchangbodh.com/videsh-yog"],
             ["Travel, work, study or settlement: which house combinations (AstroSight)", "https://astrosight.ai/kundli/predicting-foreign-travel-birth-chart"],
             ["Agni Purana ch. 233: taras to avoid when setting out", "https://www.wisdomlib.org/hinduism/book/the-agni-purana/d/doc1083462.html"],
+            ["Marriage timing: dasa and the double transit of Guru and Sani (Dekho Panchang)", "https://dekhopanchang.com/en/learn/marriage"],
+            ["Marriage timing and delay marks (AstroMedha)", "https://astromedha.in/insights/vedic/when-will-i-get-married"],
+            ["Love or arranged: the 5th and 7th lords and Rahu (AstroMedha)", "https://astromedha.in/insights/vedic/love-marriage-or-arranged-marriage"],
+            ["Kuja (Sevvai) dosham and its cancellations (OnlineJyotish)", "https://www.onlinejyotish.com/articles/marriage-matching/english/kuja-dosha-nivarana.php"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],
