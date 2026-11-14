@@ -4,6 +4,7 @@
 // The weights are a judgement about how much each tradition should count. They are kept
 // in one place (this file) so they are easy to read and change.
 
+import { VargaStrength, vargaStrength } from "./vargas";
 import { DashaGocharam, dashaGocharam } from "./dashaTransit";
 import {
   BAD_YOGAS,
@@ -111,6 +112,8 @@ export interface DayContext {
   yogi: YogiInfo;
   /** The running dasa, bhukti and antaram lords judged in the day's sky. */
   gocharam: DashaGocharam | null;
+  /** Navamsa and dasamsa strength of each birth planet. */
+  amsa: Record<PlanetId, VargaStrength> | null;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -132,6 +135,7 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     sav: useLagna ? ashtakavarga(natal).sav : null,
     yogi,
     gocharam: useLagna && dasha ? dashaGocharam(natal, yogi, dasha, positions, mid) : null,
+    amsa: useLagna ? vargaStrength(natal) : null,
   };
 }
 
@@ -674,6 +678,17 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
       if (st.boost !== 0) {
         for (const k of KEYS) e[k] += st.boost * 1.5;
         notes.push(`${PLANET_INFO[lord].en} ${st.reasons.join(" and ")}`);
+      }
+      // Amsa strength: navamsa backs the period as a whole, dasamsa backs its work.
+      const am = ctx.amsa?.[lord];
+      if (am) {
+        const inner = Math.max(-2, Math.min(2, am.inner)) * 0.6;
+        for (const k of KEYS) e[k] += inner;
+        e.work += am.career * 0.6;
+        e.apply += am.career * 0.6;
+        if (am.vargottama) notes.push(`${PLANET_INFO[lord].en} is vargottama`);
+        else if (am.d9 === "exalted" || am.d9 === "debilitated") notes.push(`${PLANET_INFO[lord].en} is ${am.d9} in navamsa`);
+        if (am.d10 === "exalted" || am.d10 === "debilitated") notes.push(`${PLANET_INFO[lord].en} is ${am.d10} in dasamsa`);
       }
     }
     // The same lords in today's sky: a period lord that is strong in transit delivers more.

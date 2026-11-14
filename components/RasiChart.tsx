@@ -18,14 +18,18 @@ interface Props {
   lagnaSign?: number | null;
   retro?: Partial<Record<PlanetId, boolean>>;
   highlightSign?: number | null;
+  /** For amsa charts: the sign each planet falls in, used instead of its longitude. */
+  signs?: Record<PlanetId, number>;
+  /** A small mark after a planet: up (exalted or own), down (debilitated), same (same sign as rasi). */
+  marks?: Partial<Record<PlanetId, ("up" | "down" | "same")[]>>;
 }
 
-export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highlightSign }: Props) {
+export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highlightSign, signs, marks }: Props) {
   return (
     <div className="grid aspect-square w-full max-w-[26rem] grid-cols-4 grid-rows-4 border border-ink/70 bg-paper text-[0.8rem]">
       {RASI.map((r, sign) => {
         const [row, col] = CELL[sign];
-        const here = PLANETS.filter((p) => signOf(positions[p]) === sign);
+        const here = PLANETS.filter((p) => (signs ? signs[p] : signOf(positions[p])) === sign);
         const isLagna = lagnaSign === sign;
         return (
           <div
@@ -46,7 +50,12 @@ export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highli
                 <span key={p} title={`${p} ${formatDeg(positions[p])}`} className={p === "Mo" ? "text-peacock" : ""}>
                   {p}
                   {retro?.[p] && p !== "Ra" && p !== "Ke" ? <span className="font-normal text-mute">(R)</span> : null}
-                  <span className="ml-0.5 font-normal text-mute">{Math.floor(positions[p] % 30)}°</span>
+                  {!signs && <span className="ml-0.5 font-normal text-mute">{Math.floor(positions[p] % 30)}°</span>}
+                  {marks?.[p]?.map((m) => (
+                    <span key={m} className={`ml-0.5 ${m === "up" ? "text-go" : m === "down" ? "text-avoid" : "text-peacock"}`} title={m === "up" ? "Exalted or own sign" : m === "down" ? "Debilitated" : "Same sign as in the rasi chart"}>
+                      {m === "up" ? "▲" : m === "down" ? "▼" : "●"}
+                    </span>
+                  ))}
                 </span>
               ))}
             </span>

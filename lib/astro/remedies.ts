@@ -12,6 +12,7 @@ import { dignity, isCombust } from "./dignity";
 import { ACTIVITY } from "./pakshi";
 import { DayContext, Reading } from "./score";
 import { saturnPhase } from "./transits";
+import { vargaStrength } from "./vargas";
 import { findYogas } from "./yogas";
 import { PLANET_DEITY, starRelation, YogiInfo } from "./yogi";
 
@@ -138,6 +139,7 @@ export const MODE_RULE: Record<CareMode, string> = {
 /** Which planets to strengthen, which to settle, and who needs attention first. */
 export function planetCare(n: Natal, y: YogiInfo, g: DashaGocharam | null): PlanetCare[] {
   const yogas = findYogas(n);
+  const amsa = vargaStrength(n);
   return PLANETS.map((p) => {
     const sign = signOf(n.positions[p]);
     const dig = dignity(p, sign);
@@ -157,6 +159,12 @@ export function planetCare(n: Natal, y: YogiInfo, g: DashaGocharam | null): Plan
     if (st.boost >= 1) state.push(st.reasons.join(" and "));
     const deg = n.positions[p] % 30;
     if (deg < 1.5 || deg > 28.5) { state.push("at the edge of its sign"); weak += 1; }
+    if (!node) {
+      const a = amsa[p];
+      if (a.vargottama) { state.push("vargottama"); weak = Math.max(0, weak - 1); }
+      else if (a.d9 === "exalted" || a.d9 === "own") { state.push(`${a.d9 === "exalted" ? "exalted" : "own sign"} in navamsa`); weak = Math.max(0, weak - 1); }
+      else if (a.d9 === "debilitated") { state.push("debilitated in navamsa"); weak += 1.5; }
+    }
 
     const lord = g?.lords.find((l) => l.lord === p) ?? null;
     const runningLevels = g?.lords.filter((l) => l.lord === p).map((l) => l.level) ?? [];

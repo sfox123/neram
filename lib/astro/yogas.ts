@@ -9,6 +9,7 @@ import { siderealLongitude } from "./ephemeris";
 import { nextSignChange } from "./panchang";
 import { MS_DAY } from "./time";
 import { Tone } from "./transits";
+import { vargaStrength } from "./vargas";
 import { yogiInfo } from "./yogi";
 
 export type YogaGroup = "Pancha Mahapurusha" | "Raja yogas" | "Dhana yogas" | "Sun and Moon yogas" | "Other yogas" | "To watch";
@@ -63,6 +64,7 @@ export function findYogas(n: Natal): Yoga[] {
   const fromMoon = (p: PlanetId) => houseFrom(n.moonSign, s(p));
   const out: Yoga[] = [];
   const y = yogiInfo(n);
+  const amsa = vargaStrength(n);
 
   // Things that strengthen or spoil any yoga planet.
   const modifiersFor = (p: PlanetId): string[] => {
@@ -74,6 +76,14 @@ export function findYogas(n: Natal): Yoga[] {
     if (p !== "Su" && p !== "Mo" && n.retro[p] && p !== "Ra" && p !== "Ke") m.push(`${N(p)} is retrograde: the yoga works inwardly first, and often on second attempts.`);
     const deg = pos[p] % 30;
     if (deg < 1 || deg > 29) m.push(`${N(p)} is at the very edge of its sign, which weakens it.`);
+    // Navamsa: the check on whether the rasi position is backed.
+    const a = amsa[p];
+    if (p !== "Ra" && p !== "Ke") {
+      if (a.vargottama && a.d9 !== "debilitated") m.push(`${N(p)} is vargottama (same sign in navamsa), so the yoga is steady and dependable.`);
+      else if (a.d9 === "exalted") m.push(`${N(p)} is exalted in the navamsa, so the yoga is fully backed and grows with age.`);
+      else if (a.d9 === "own") m.push(`${N(p)} is in its own sign in the navamsa, which backs the yoga.`);
+      else if (a.d9 === "debilitated") m.push(`${N(p)} is debilitated in the navamsa (${a.d1 === "exalted" ? "exalted in rasi, fallen in amsa" : "fallen in amsa"}): the yoga is real but gives unevenly, and less than the rasi chart alone suggests.`);
+    }
     const st = y.standing[p];
     if (st.boost >= 2) m.push(`${N(p)} ${st.reasons.join(" and ")}, which adds luck to the yoga.`);
     if (st.boost <= -1.5) m.push(`${N(p)} ${st.reasons.join(" and ")}, which puts a brake on the yoga.`);

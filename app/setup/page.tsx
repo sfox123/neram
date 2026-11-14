@@ -201,6 +201,13 @@ function SetupForm() {
             every score by up to 4 points either way.
           </p>
           <p>
+            <strong>Navamsa and dasamsa.</strong> The navamsa divides each sign into nine parts of 3°20′ counted on from Mesham; the dasamsa into ten
+            parts of 3°, counted from the sign itself for odd signs and from the ninth sign for even signs. A planet in the same sign in rasi and
+            navamsa is vargottama. For your running bhukti and antaram lords, navamsa dignity moves every score by up to about 1 point and dasamsa
+            dignity moves work and applications by the same. The amsa lagnas change every twelve to fourteen minutes of birth time, so the page shows
+            how close your recorded minute is to a change and reads both sides when it is within two minutes.
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -243,6 +250,11 @@ function SetupForm() {
             ["Paagai (degree) astrology: HD, LD and upasana (Lanka4)", "https://www.lanka4.com/news/1044222/what-is-bhagai-astrology"],
             ["Pancha Mahapurusha yogas: formation and conditions (VedicBirth)", "https://www.vedicbirth.com/blog/panch-mahapurusha-yoga-guide"],
             ["Pancha Mahapurusha yogas in B. V. Raman's Three Hundred Important Combinations", "https://barbarapijan.com/bpa/Yoga/300ComBVRaman/300Raman_019-023_Panchmahapurusha.htm"],
+            ["Navamsa: calculation, vargottama and reading planetary strength (Hindutone)", "https://hindutone.com/astrology/navamsa-chart-d9-explained/"],
+            ["Navamsa: exalted in rasi but debilitated in navamsa, and the lagna lord's place (Wikipedia)", "https://en.wikipedia.com/wiki/Navamsa_(astrology)"],
+            ["Vargottama degrees and limits (Vedic Marga)", "https://vedicmarga.com/vargottama-calculator/"],
+            ["Dasamsa: calculation and how to read it (Jagannatha Hora)", "https://jagannathhora.com/?p=1246"],
+            ["Dasamsa: reading signatures against the rasi chart (Jagannatha Hora)", "https://jagannathhora.com/d10-chart-career-reading-examples/"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],
