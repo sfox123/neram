@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Graha } from "./Graha";
 import { useStore } from "./store";
 
 const NAV = [
@@ -31,7 +32,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <header className="shrink-0 border-line lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:border-r lg:py-8 lg:pl-8 lg:pr-6">
         <div className="flex items-baseline justify-between px-5 pt-5 lg:block lg:px-0 lg:pt-0">
           <Link href="/" className="block">
-            <span className="tamil block text-3xl leading-none text-peacock">நேரம்</span>
+            <span className="flex items-center gap-2">
+              <Graha id="Su" size={26} title="Neram" />
+              <span className="tamil block text-3xl leading-none text-peacock">நேரம்</span>
+            </span>
             <span className="mt-1 hidden text-sm text-mute lg:block">Neram, {profile.name}&rsquo;s almanac</span>
           </Link>
           <span className="text-sm text-mute lg:hidden">{profile.name}&rsquo;s almanac</span>

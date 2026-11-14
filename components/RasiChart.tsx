@@ -3,6 +3,7 @@
 // South Indian rasi chart: the signs stay fixed in their boxes, Meenam at top left,
 // running clockwise.
 
+import { Graha, GRAHA_COLOR } from "./Graha";
 import { formatDeg, PlanetId, PLANETS, RASI, signOf } from "@/lib/astro/constants";
 import { Positions } from "@/lib/astro/ephemeris";
 
@@ -40,7 +41,7 @@ export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highli
             style={{ gridRow: row + 1, gridColumn: col + 1 }}
           >
             <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[0.7rem] leading-none text-mute">
-              {r.ta}
+              <span className="tamil text-[0.75rem] text-ink/80">{r.tamil}</span>
               {isLagna && (
                 <span className="rounded-sm bg-deep px-1 text-[0.65rem] font-semibold leading-4 text-paper" title={lagnaLabel}>
                   {lagnaLabel}
@@ -49,7 +50,8 @@ export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highli
             </span>
             <span className="mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5 font-semibold leading-tight">
               {here.map((p) => (
-                <span key={p} title={`${p} ${formatDeg(positions[p])}`} className={p === "Mo" ? "text-peacock" : ""}>
+                <span key={p} title={`${p} ${formatDeg(positions[p])}`} className="inline-flex items-center" style={{ color: GRAHA_COLOR[p] }}>
+                  <Graha id={p} size={13} animate={false} className="mr-0.5" />
                   {p}
                   {retro?.[p] && p !== "Ra" && p !== "Ke" ? <span className="font-normal text-mute">(R)</span> : null}
                   {!signs && <span className="ml-0.5 font-normal text-mute">{Math.floor(positions[p] % 30)}°</span>}

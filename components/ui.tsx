@@ -14,7 +14,7 @@ export function TierTag({ tier, className = "" }: { tier: Tier; className?: stri
 export function Meter({ score, tier }: { score: number; tier: Tier }) {
   return (
     <span className="block h-1.5 w-full overflow-hidden rounded-sm bg-ink/10" role="img" aria-label={`Score ${score} of 100`}>
-      <span className={`tier-${tier} block h-full`} style={{ width: `${Math.max(4, score)}%` }} />
+      <span className={`tier-${tier} meter-fill block h-full`} style={{ width: `${Math.max(4, score)}%` }} />
     </span>
   );
 }
@@ -31,10 +31,13 @@ export function PageTitle({ title, tamil, children }: { title: string; tamil?: s
   );
 }
 
-export function H2({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
+export function H2({ children, tamil, aside }: { children: React.ReactNode; tamil?: string; aside?: React.ReactNode }) {
   return (
     <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-      <h2 className="display text-2xl">{children}</h2>
+      <h2 className="display text-2xl">
+        {children}
+        {tamil && <span className="tamil ml-2.5 text-lg font-medium text-peacock">{tamil}</span>}
+      </h2>
       {aside && <div className="text-sm text-mute">{aside}</div>}
     </div>
   );

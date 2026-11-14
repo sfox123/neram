@@ -117,3 +117,41 @@
   }
   input:focus, select:focus { border-color: var(--color-peacock); }
 }
+
+/* ---- Vector sky: the wheel, the grahas and a few quiet motions ------------------------ */
+@keyframes orbit { to { transform: rotate(360deg); } }
+@keyframes orbit-rev { to { transform: rotate(-360deg); } }
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes glow {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+@keyframes drift {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-12px) rotate(5deg); }
+}
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+.wheel-slow, .wheel-slow-rev, .sun-rays, .graha-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.wheel-slow { animation: orbit 240s linear infinite; }
+.wheel-slow-rev { animation: orbit-rev 160s linear infinite; }
+.sun-rays { animation: orbit 48s linear infinite; }
+.graha-pop { animation: pop 0.7s cubic-bezier(0.2, 0.9, 0.2, 1.2) both; }
+.moon-glow { animation: glow 3.6s ease-in-out infinite; }
+.verdict-in { animation: rise-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.verdict-graha { animation: drift 9s ease-in-out infinite; }
+.meter-fill { transform-origin: left; animation: grow 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-slow, .wheel-slow-rev, .sun-rays, .graha-pop, .moon-glow, .verdict-in, .verdict-graha, .meter-fill { animation: none; }
+}

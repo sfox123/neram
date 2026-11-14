@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Graha } from "@/components/Graha";
+import { SkyWheel } from "@/components/SkyWheel";
 import { Skyline, TierLegend } from "@/components/Skyline";
 import { useStore, useStored, useToday } from "@/components/store";
 import { FLOW, SARAM_FRESH_MS, SARAM_KEY, SaramCheck } from "@/lib/astro/saram";
@@ -13,6 +15,16 @@ import { ACTIVITY, BIRDS } from "@/lib/astro/pakshi";
 import { label, nextVanija } from "@/lib/astro/panchang";
 import { ACTIVITIES, ActivityKey, advice, bestWindows, blocks, readAt, TIER, worstWindows } from "@/lib/astro/score";
 import { fmtCountdown, fmtDate, fmtDateLong, fmtDuration, fmtTime } from "@/lib/astro/time";
+
+const ACTIVITY_TAMIL: Record<ActivityKey, string> = {
+  overall: "நேரம்",
+  work: "வேலை",
+  apply: "போட்டி",
+  start: "தொடக்கம்",
+  money: "பணம்",
+  people: "சந்திப்பு",
+  travel: "பயணம்",
+};
 
 export default function NowPage() {
   const { ready, now, natal, profile } = useStore();
@@ -87,7 +99,10 @@ export default function NowPage() {
         <p className="text-[1.05rem] opacity-85">
           {picked ? `At ${fmtTime(picked, tz)} the time is` : `${profile.name}, right now the time is`}
         </p>
-        <p className="verdict-word mt-3 text-[clamp(5.5rem,17vw,12.5rem)]">{TIER[tier].word}</p>
+        <span aria-hidden className="verdict-graha pointer-events-none absolute -right-6 -top-6 opacity-[0.16] sm:right-6 sm:top-2">
+          <Graha id={reading.hora.value} size={220} />
+        </span>
+        <p key={tier} className="verdict-word verdict-in relative mt-3 text-[clamp(5.5rem,17vw,12.5rem)]">{TIER[tier].word}</p>
         <div className="mt-6 flex flex-wrap items-end justify-between gap-x-12 gap-y-5">
           <div>
             <p className="tamil text-2xl sm:text-3xl">{TIER[tier].tamil}</p>
@@ -123,7 +138,9 @@ export default function NowPage() {
                 className={`block w-full rounded px-2 py-2 text-left -mx-2 ${activity === a.key ? "bg-panel" : "hover:bg-panel/60"}`}
               >
                 <span className="flex items-baseline justify-between gap-2">
-                  <span className="text-[0.95rem] font-semibold">{a.label}</span>
+                  <span className="text-[0.95rem] font-semibold">
+                    {a.label} <span className="tamil ml-1 font-medium text-mute">{ACTIVITY_TAMIL[a.key]}</span>
+                  </span>
                   <TierTag tier={reading.tiers[a.key]} />
                 </span>
                 <span className="mt-2 block">
@@ -137,7 +154,7 @@ export default function NowPage() {
 
       {/* The day */}
       <section className="mt-10">
-        <H2 aside={<TierLegend />}>
+        <H2 tamil={activity === "overall" ? "இன்று" : ACTIVITY_TAMIL[activity]} aside={<TierLegend />}>
           {activity === "overall" ? "Today, sunrise to sunrise" : `Today for ${ACTIVITIES.find((a) => a.key === activity)!.label.toLowerCase()}`}
         </H2>
         <Skyline frame={day.frame} segments={day.segments} activity={activity} now={now} selected={picked} onPick={setPicked} />
@@ -146,7 +163,7 @@ export default function NowPage() {
       <div className="mt-10 grid gap-x-12 gap-y-10 lg:grid-cols-[1.15fr_1fr]">
         {/* Why */}
         <section>
-          <H2 aside={`Score ${reading.scores[activity]} of 100, starting from 50`}>Why</H2>
+          <H2 tamil="ஏன்" aside={`Score ${reading.scores[activity]} of 100, starting from 50`}>Why</H2>
           <FactorList factors={reading.factors} activity={activity} limit={8} />
           <p className="mt-3 text-sm text-mute">
             Each line adds to or takes from the score.{" "}
@@ -159,10 +176,12 @@ export default function NowPage() {
         <div className="space-y-10">
           {/* Do and don't */}
           <section>
-            <H2>{picked ? `At ${fmtTime(picked, tz)}` : "Right now"}</H2>
+            <H2 tamil="இப்போது">{picked ? `At ${fmtTime(picked, tz)}` : "Right now"}</H2>
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <h3 className="mb-2 font-semibold text-go">Do</h3>
+                <h3 className="mb-2 font-semibold text-go">
+                  Do <span className="tamil ml-1 font-medium">செய்</span>
+                </h3>
                 <ul className="space-y-2 text-[0.95rem]">
                   {tips.dos.map((d) => (
                     <li key={d}>{d}</li>
@@ -170,7 +189,9 @@ export default function NowPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="mb-2 font-semibold text-avoid">Don&rsquo;t</h3>
+                <h3 className="mb-2 font-semibold text-avoid">
+                  Don&rsquo;t <span className="tamil ml-1 font-medium">தவிர்</span>
+                </h3>
                 {tips.donts.length ? (
                   <ul className="space-y-2 text-[0.95rem]">
                     {tips.donts.map((d) => (
@@ -186,7 +207,7 @@ export default function NowPage() {
 
           {/* Windows */}
           <section>
-            <H2 aside={<Link href="/day" className="text-peacock underline underline-offset-2">Full day plan</Link>}>
+            <H2 tamil="நல்ல நேரம்" aside={<Link href="/day" className="text-peacock underline underline-offset-2">Full day plan</Link>}>
               Best windows still ahead
             </H2>
             {best.length ? (
@@ -226,13 +247,19 @@ export default function NowPage() {
 
       {/* What is running */}
       <section className="mt-12">
-        <H2>Running at this moment</H2>
-        <dl className="grid gap-x-10 gap-y-5 border-t border-line pt-5 sm:grid-cols-2 xl:grid-cols-3">
-          <Item term="Dasa, bhukti, antaram" href="/dasa">
+        <H2 tamil="நடப்பு">Running at this moment</H2>
+        <div className="grid gap-x-10 gap-y-8 border-t border-line pt-6 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
+        <SkyWheel at={now} latitude={profile.here.latitude} longitude={profile.here.longitude} natalMoonSign={natal.moonSign} className="mx-auto w-full max-w-[22rem] lg:mx-0" />
+        <dl className="grid gap-x-10 gap-y-5 sm:grid-cols-2">
+          <Item term="Dasa, bhukti, antaram" tamil="தசை" href="/dasa">
             {dasha ? (
               <>
-                <strong>
-                  {PLANET_INFO[dasha.maha.lord].ta} / {PLANET_INFO[dasha.bhukti.lord].ta} / {PLANET_INFO[dasha.antaram.lord].ta}
+                <strong className="inline-flex flex-wrap items-center gap-x-1.5">
+                  <Graha id={dasha.maha.lord} size={18} /> <span className="tamil">{PLANET_INFO[dasha.maha.lord].tamil}</span>
+                  <span className="text-mute">/</span>
+                  <Graha id={dasha.bhukti.lord} size={18} /> <span className="tamil">{PLANET_INFO[dasha.bhukti.lord].tamil}</span>
+                  <span className="text-mute">/</span>
+                  <Graha id={dasha.antaram.lord} size={18} /> <span className="tamil">{PLANET_INFO[dasha.antaram.lord].tamil}</span>
                 </strong>
                 <br />
                 Antaram until {fmtDateLong(dasha.antaram.end, tz)}; bhukti until {fmtDateLong(dasha.bhukti.end, tz)}.
@@ -241,27 +268,34 @@ export default function NowPage() {
               "Outside the 120-year dasa range."
             )}
           </Item>
-          <Item term="Pancha Pakshi" href="/pakshi">
+          <Item term="Pancha Pakshi" tamil="பஞ்ச பட்சி" href="/pakshi">
             <strong>
-              {bird.ta} <span className="tamil font-medium">{bird.tamil}</span> is {ACTIVITY[reading.yama.activity].en.toLowerCase()}
+              <span className="tamil">{bird.tamil}</span> {bird.ta} is {ACTIVITY[reading.yama.activity].en.toLowerCase()}{" "}
+              <span className="tamil font-medium text-peacock">{ACTIVITY[reading.yama.activity].tamil}</span>
             </strong>
             <br />
             Yama {ACTIVITY[reading.yama.activity].ta} until {fmtTime(reading.yama.end, tz)}; sub-period {ACTIVITY[reading.sub.activity].ta} until{" "}
             {fmtTime(reading.sub.end, tz)}.
           </Item>
-          <Item term="Hora">
-            <strong>{PLANET_INFO[reading.hora.value].ta} hora</strong> until {fmtTime(reading.hora.end, tz)}
+          <Item term="Hora" tamil="ஓரை">
+            <strong>
+              <Graha id={reading.hora.value} size={18} /> <span className="tamil">{PLANET_INFO[reading.hora.value].tamil}</span> hora
+            </strong>{" "}
+            until {fmtTime(reading.hora.end, tz)}
             <br />
             Gowri: {reading.gowri.value} until {fmtTime(reading.gowri.end, tz)}.
           </Item>
           {profile.timeConfirmed && (
-            <Item term="Rising lagna" href="/day">
-              <strong>{RASI[reading.rising.value].ta}</strong> until {fmtTime(reading.rising.end, tz)}
+            <Item term="Rising lagna" tamil="லக்னம்" href="/day">
+              <strong>
+                <span className="tamil">{RASI[reading.rising.value].tamil}</span> {RASI[reading.rising.value].ta}
+              </strong>{" "}
+              until {fmtTime(reading.rising.end, tz)}
               <br />
               Your {ordinal(((reading.rising.value - natal.lagnaSign + 12) % 12) + 1)} house from {RASI[natal.lagnaSign].ta} lagna.
             </Item>
           )}
-          <Item term="Saram (breath)" href="/saram">
+          <Item term="Saram (breath)" tamil="சரம்" href="/saram">
             {saram ? (
               <>
                 <strong>{FLOW[saram.flow].name}</strong>
@@ -272,19 +306,19 @@ export default function NowPage() {
               "Not checked in the last hour. Check which nostril is flowing."
             )}
           </Item>
-          <Item term="Moon" href="/sky">
+          <Item term="Moon" tamil="சந்திரன்" href="/sky">
             <strong>
-              {RASI[reading.moonSign].ta}, {NAKSHATRA[reading.star.value].ta}
+              <Graha id="Mo" size={18} /> <span className="tamil">{RASI[reading.moonSign].tamil}</span>, <span className="tamil">{NAKSHATRA[reading.star.value].tamil}</span>
             </strong>
             <br />
             {reading.tara.name} tara for you; Moon is {reading.chandra.house === 8 ? "in Chandrashtamam" : `${ordinal(reading.chandra.house)} from your rasi`}.
           </Item>
-          <Item term="Tithi and yoga" href="/day">
+          <Item term="Tithi and yoga" tamil="திதி" href="/day">
             <strong>{label.tithi(reading.tithi.value)}</strong> until {fmtTime(reading.tithi.end, tz)}
             <br />
             {label.yoga(reading.yoga.value)} yoga, {label.karana(reading.karana.value)} karana.
           </Item>
-          <Item term="Today's fixed periods" href="/day">
+          <Item term="Today's fixed periods" tamil="ராகு காலம்" href="/day">
             Rahu kalam {fmtTime(p.rahu.start, tz)} to {fmtTime(p.rahu.end, tz)}
             <br />
             Yamagandam {fmtTime(p.yamagandam.start, tz)} to {fmtTime(p.yamagandam.end, tz)}
@@ -296,12 +330,13 @@ export default function NowPage() {
             )}
           </Item>
         </dl>
+        </div>
       </section>
     </div>
   );
 }
 
-function Item({ term, href, children }: { term: string; href?: string; children: React.ReactNode }) {
+function Item({ term, tamil, href, children }: { term: string; tamil?: string; href?: string; children: React.ReactNode }) {
   return (
     <div>
       <dt className="text-sm text-mute">
@@ -312,6 +347,7 @@ function Item({ term, href, children }: { term: string; href?: string; children:
         ) : (
           term
         )}
+        {tamil && <span className="tamil ml-2 text-peacock">{tamil}</span>}
       </dt>
       <dd className="mt-1 text-[0.95rem] leading-relaxed">{children}</dd>
     </div>
