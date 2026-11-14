@@ -76,14 +76,10 @@ export default function VargasPage() {
     const d9 = buildVarga(natal, "D9");
     const d10 = buildVarga(natal, "D10");
     const w9 = lagnaWindow(natal, "D9");
-    const w10 = lagnaWindow(natal, "D10");
-    // If the recorded minute sits on a change of dasamsa lagna, read the neighbour as well.
-    const altSign = w10.fragile ? (w10.secondsBefore < w10.secondsAfter ? w10.prevSign : w10.nextSign) : null;
-    const d10alt = altSign === null ? null : buildVarga(natal, "D10", altSign);
     const strength = vargaStrength(natal);
     const careerPlanets = PLANETS.filter((p) => strength[p].career >= 1.5);
     const timing = careerPlanets.map((p) => ({ planet: p, act: activation(natal, [p], at) }));
-    return { d9, d10, d10alt, w9, w10, strength, timing, read9: navamsaReading(natal, d9), read10: dasamsaReading(natal, d10), read10alt: d10alt ? dasamsaReading(natal, d10alt) : null };
+    return { d9, d10, w9, strength, timing, read9: navamsaReading(natal, d9), read10: dasamsaReading(natal, d10) };
   }, [ready, natal, profile.timeConfirmed, dayStamp]);
 
   if (!ready) return <Loading />;
@@ -100,7 +96,7 @@ export default function VargasPage() {
     );
   if (!data) return <Loading />;
 
-  const { d9, d10, d10alt, w9, w10, strength, timing, read9, read10, read10alt } = data;
+  const { d9, d10, w9, strength, timing, read9, read10 } = data;
   const btz = profile.birthPlace.tz;
   const clock = (x: Date) => new Intl.DateTimeFormat("en-GB", { timeZone: btz, hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true }).format(x).replace(" ", " ");
   const d = (x: Date) => fmtDateLong(x, profile.here.tz);
@@ -109,8 +105,6 @@ export default function VargasPage() {
   const vargottama = real.filter((p) => strength[p].vargottama);
   const best = real.filter((p) => strength[p].word === "Confirmed" || strength[p].word === "Gains");
   const worst = real.filter((p) => strength[p].word === "Falls" || strength[p].word === "Slips");
-  const earlier = w10.secondsBefore < w10.secondsAfter;
-  const edgeSeconds = Math.round(Math.min(w10.secondsBefore, w10.secondsAfter));
   const windowText = (w: LagnaWindow) => `${clock(w.from)} to ${clock(w.to)}`;
 
   return (
@@ -229,44 +223,10 @@ export default function VargasPage() {
       </section>
 
       <section className="mt-14">
-        <H2 aside={d10alt ? "two possible lagnas" : `${RASI[d10.lagnaSign].ta} lagna`}>Your career: the dasamsa</H2>
+        <H2 aside={`${RASI[d10.lagnaSign].ta} lagna`}>Your career: the dasamsa</H2>
+        <Lines lines={read10} />
 
-        {d10alt && (
-          <div className="mb-6 rounded border border-hold bg-hold/15 px-5 py-4">
-            <p className="display text-xl">Your birth minute sits on a change of dasamsa lagna</p>
-            <p className="mt-2 max-w-[74ch] text-[0.98rem]">
-              The dasamsa lagna moves one sign about every twelve minutes. At your recorded time it is {RASI[d10.lagnaSign].ta}, but only {edgeSeconds}{" "}
-              seconds {earlier ? "earlier" : "later"} it would be {RASI[d10alt.lagnaSign].ta}. A clock time written to the minute cannot settle that, so
-              both readings are given. The dignities in the table above hold either way; only the houses differ. Read the two descriptions and see
-              which matches your working life so far.
-            </p>
-          </div>
-        )}
-
-        <div className={d10alt ? "grid gap-x-10 gap-y-10 xl:grid-cols-2" : ""}>
-          <div>
-            {d10alt && (
-              <p className="mb-3">
-                <strong>{RASI[d10.lagnaSign].ta} lagna</strong> <span className="text-mute">if born {earlier ? `at ${clock(w10.from)} or later` : `at ${clock(w10.to)} or earlier`} (your recorded time)</span>
-              </p>
-            )}
-            <div className={d10alt ? "[&_li]:md:grid-cols-1" : ""}>
-              <Lines lines={read10} />
-            </div>
-          </div>
-          {d10alt && read10alt && (
-            <div>
-              <p className="mb-3">
-                <strong>{RASI[d10alt.lagnaSign].ta} lagna</strong> <span className="text-mute">if born {earlier ? `before ${clock(w10.from)}` : `after ${clock(w10.to)}`}</span>
-              </p>
-              <div className="[&_li]:md:grid-cols-1">
-                <Lines lines={read10alt} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <h3 className="display mt-10 text-xl">Firm either way: your strongest career planets</h3>
+        <h3 className="display mt-10 text-xl">Your strongest career planets</h3>
         <ul className="mt-3 border-t border-line">
           {timing.length === 0 && <li className="border-b border-line py-3 text-mute">No planet is exalted or in its own sign in the dasamsa; career strength is spread evenly.</li>}
           {timing.map(({ planet, act }) => {
