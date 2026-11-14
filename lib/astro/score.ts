@@ -4,6 +4,7 @@
 // The weights are a judgement about how much each tradition should count. They are kept
 // in one place (this file) so they are easy to read and change.
 
+import { TravelPromise, travelPromise } from "./travel";
 import { InduReading, induReading, induWeight } from "./indu";
 import { VargaStrength, vargaStrength } from "./vargas";
 import { DashaGocharam, dashaGocharam } from "./dashaTransit";
@@ -117,6 +118,8 @@ export interface DayContext {
   amsa: Record<PlanetId, VargaStrength> | null;
   /** The Indu lagna (wealth ascendant) reading. */
   indu: InduReading | null;
+  /** What the birth chart says about travel, and which planets carry it. */
+  travel: TravelPromise | null;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -140,6 +143,7 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     gocharam: useLagna && dasha ? dashaGocharam(natal, yogi, dasha, positions, mid) : null,
     amsa: useLagna ? vargaStrength(natal) : null,
     indu: useLagna ? induReading(natal) : null,
+    travel: useLagna ? travelPromise(natal) : null,
   };
 }
 
@@ -682,6 +686,14 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
       if (st.boost !== 0) {
         for (const k of KEYS) e[k] += st.boost * 1.5;
         notes.push(`${PLANET_INFO[lord].en} ${st.reasons.join(" and ")}`);
+      }
+      // Travel: a period lord tied to the 9th, 12th, 3rd or 7th, or Rahu, favours setting out.
+      if (ctx.travel) {
+        const tw = ctx.travel.planets[lord].weight;
+        if (tw >= 2.5) {
+          e.travel += Math.min(2, tw * 0.5);
+          notes.push(`${PLANET_INFO[lord].en} is one of your travel planets`);
+        }
       }
       // Indu lagna: a period lord well placed from the wealth ascendant helps money; one in a thinning place holds it back.
       if (ctx.indu) {

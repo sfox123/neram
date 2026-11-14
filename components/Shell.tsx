@@ -18,6 +18,7 @@ const NAV = [
   { href: "/remedies", label: "Remedies", tamil: "பரிகாரம்" },
   { href: "/sky", label: "Chart and transits", tamil: "கோசாரம்" },
   { href: "/money", label: "Money", tamil: "தனம்" },
+  { href: "/travel", label: "Travel abroad", tamil: "வெளிநாடு" },
   { href: "/people", label: "People", tamil: "கூட்டு" },
   { href: "/setup", label: "Setup and method", tamil: "அமைப்பு" },
 ];

@@ -214,6 +214,15 @@ function SetupForm() {
             place from it moves the money score by up to 2 points, and the Moon, Guru or Sukran crossing it adds to the daily money signals.
           </p>
           <p>
+            <strong>Travel abroad.</strong> The promise is scored from the 12th, 9th, 3rd and 7th houses and their lords, Rahu&rsquo;s house and
+            sign, the count of planets in movable signs, the lagna lord&rsquo;s tie to the 12th lord, Sani or the nodes in the 4th, and ties between
+            the 10th lord and the foreign houses. Timing adds the periods of the planets tied to those houses to the transits of Rahu, Guru and Sani
+            over the 9th, 12th and lagna and the 12th from the Moon. Each moment is then ranked against your own adult life: the top sixth is high (and
+            needs a period and a transit together), the next quarter raised. Departure days use the Moon&rsquo;s star (movable, swift and gentle stars
+            favour journeys), tara bala, Chandrashtamam, tithi and the weekday&rsquo;s blocked direction (soolai: Sunday and Friday west, Monday and
+            Saturday east, Tuesday and Wednesday north, Thursday south).
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -263,6 +272,11 @@ function SetupForm() {
             ["Dasamsa: reading signatures against the rasi chart (Jagannatha Hora)", "https://jagannathhora.com/d10-chart-career-reading-examples/"],
             ["Indu lagna: the Uttara Kalamrita calculation, step by step (PanchangBodh)", "https://panchangbodh.com/indu-lagna-calculator"],
             ["Indu lagna: reading the lord, occupants and wealth-producing places (Vaya)", "https://vaya.so/blog/indu-lagna-il"],
+            ["Foreign travel: houses, Rahu, movable signs and timing by dasa and transit (AstroMedha)", "https://astromedha.in/insights/vedic/foreign-travel-yoga-in-kundli"],
+            ["Astrological factors causing foreign travel (Daily Mirror, Sri Lanka)", "https://dailymirror.lk/jyotisha-news/Astrological-factors-causing-foreign-travel/312-165091"],
+            ["Videsh yog: the ten checks, including the 4th house and lagna-lord ties (PanchangBodh)", "https://panchangbodh.com/videsh-yog"],
+            ["Travel, work, study or settlement: which house combinations (AstroSight)", "https://astrosight.ai/kundli/predicting-foreign-travel-birth-chart"],
+            ["Agni Purana ch. 233: taras to avoid when setting out", "https://www.wisdomlib.org/hinduism/book/the-agni-purana/d/doc1083462.html"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],

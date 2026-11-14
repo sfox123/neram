@@ -40,6 +40,7 @@ It deploys to Vercel as a plain Next.js app with no configuration.
 | Money | 30-day money signals, best money hours today, your money lords, the Indu lagna read in full (working, chart from it, each planet's role, periods and transits), dasa periods and slow transits tied to income |
 | Find a time | Pick an activity and a range (3 to 30 days); lists the strongest windows ranked, and day by day |
 | Saram (breath) | Tell it which nostril is flowing; do's and don'ts, and how the breath sits with the time verdict |
+| Travel abroad | The chart's promise of foreign travel and what kind (work, leisure, longer stay), windows for the next three years ranked against your own life, past windows to test it against, your travel planets and their periods, and the best days to set out with the weekday's blocked direction |
 | People | Add someone's birth details; what the two charts do to each other (poruthams, Guru's sight, chart overlay, bird friendship) |
 | Setup and method | Birth details, current location, how the score is built, sources |
 
@@ -57,6 +58,7 @@ lib/astro/
   ashtaka.ts     Ashtakavarga points per sign
   yogi.ts        yogi and avayogi points, karana nathan, HD and LD planets
   dignity.ts     exaltation, own sign, friendships, planetary sight, combustion
+  travel.ts      foreign travel: natal promise, travel planets, windows from dasa and transits, departure days
   indu.ts        Indu lagna: working, reading, wealth-producing planets, transits over it
   vargas.ts      navamsa and dasamsa signs, vargottama, amsa strength, birth-minute sensitivity, readings
   yogas.ts       yoga detection, activation by dasa periods, Guru and Sani triggers
