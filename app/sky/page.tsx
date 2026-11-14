@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { RasiChart } from "@/components/RasiChart";
 import { useStore, useToday } from "@/components/store";
 import { H2, Loading, PageTitle, ToneDot } from "@/components/ui";
+import { ashtakavarga, savGrade } from "@/lib/astro/ashtaka";
 import { ordinal, rulesText } from "@/lib/astro/chart";
 import { formatDeg, nakOf, NAKSHATRA, padaOf, PLANET_INFO, PLANETS, RASI, signOf } from "@/lib/astro/constants";
 import { allPositions } from "@/lib/astro/ephemeris";
@@ -160,6 +161,17 @@ export default function SkyPage() {
         </p>
       </section>
 
+      {known && (
+        <section className="mt-12">
+          <H2 aside="337 points in all; 28 per sign is average">Ashtakavarga: how strong each sign is for you</H2>
+          <p className="mb-5 max-w-[70ch] text-[0.95rem] text-mute">
+            Each planet in your birth chart gives points to certain signs. A transit through a sign with many points delivers; through a sign with few
+            it disappoints. The Moon&rsquo;s sign today feeds the time score.
+          </p>
+          <SavBars sav={ashtakavarga(natal).sav} lagnaSign={natal.lagnaSign} marks={{ Moon: moonSign, Guru: signOf(data.pos.Ju), Sani: signOf(data.pos.Sa) }} />
+        </section>
+      )}
+
       <div className="mt-12 grid gap-x-12 gap-y-12 lg:grid-cols-2">
         <section>
           <H2>Sign changes ahead</H2>
@@ -207,6 +219,40 @@ export default function SkyPage() {
           </table>
         </section>
       </div>
+    </div>
+  );
+}
+
+function SavBars({ sav, lagnaSign, marks }: { sav: number[]; lagnaSign: number; marks: Record<string, number> }) {
+  const max = Math.max(...sav);
+  const tierOfGrade = { strong: "go", fair: "good", average: "steady", weak: "hold", poor: "avoid" } as const;
+  return (
+    <div className="overflow-x-auto">
+      <ol className="grid min-w-[40rem] grid-cols-12 gap-1.5">
+        {sav.map((pts, sign) => {
+          const grade = savGrade(pts);
+          const here = Object.entries(marks)
+            .filter(([, s]) => s === sign)
+            .map(([k]) => k);
+          return (
+            <li key={sign} className="flex flex-col">
+              <div className="flex h-32 items-end">
+                <div
+                  className={`skyline-bar tier-${tierOfGrade[grade]} ${grade === "poor" ? "bar-avoid" : ""} flex w-full items-start justify-center rounded-t-sm pt-1 text-sm font-semibold`}
+                  style={{ height: `${(pts / max) * 100}%` }}
+                >
+                  {pts}
+                </div>
+              </div>
+              <div className="border-t border-ink/60 pt-1 text-center text-[0.75rem] leading-tight">
+                <span className="block font-semibold">{RASI[sign].ta}</span>
+                <span className="block text-mute">{ordinal(((sign - lagnaSign + 12) % 12) + 1)} house</span>
+                <span className="block min-h-[1rem] text-peacock">{here.join(", ")}</span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }

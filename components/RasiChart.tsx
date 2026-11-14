@@ -33,12 +33,14 @@ export function RasiChart({ title, subtitle, positions, lagnaSign, retro, highli
             className={`relative border border-ink/25 p-1.5 ${highlightSign === sign ? "bg-steady/60" : ""}`}
             style={{ gridRow: row + 1, gridColumn: col + 1 }}
           >
-            <span className="block text-[0.7rem] leading-none text-mute">{r.ta}</span>
-            {isLagna && (
-              <span className="absolute right-1 top-1 rounded-sm bg-deep px-1 text-[0.65rem] font-semibold leading-4 text-paper" title="Lagna">
-                Lagna
-              </span>
-            )}
+            <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[0.7rem] leading-none text-mute">
+              {r.ta}
+              {isLagna && (
+                <span className="rounded-sm bg-deep px-1 text-[0.65rem] font-semibold leading-4 text-paper" title="Lagna">
+                  Lagna
+                </span>
+              )}
+            </span>
             <span className="mt-1 flex flex-wrap gap-x-1.5 gap-y-0.5 font-semibold leading-tight">
               {here.map((p) => (
                 <span key={p} title={`${p} ${formatDeg(positions[p])}`} className={p === "Mo" ? "text-peacock" : ""}>

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Skyline, TierLegend } from "@/components/Skyline";
-import { useStore, useToday } from "@/components/store";
+import { useStore, useStored, useToday } from "@/components/store";
+import { FLOW, SARAM_FRESH_MS, SARAM_KEY, SaramCheck } from "@/lib/astro/saram";
 import { FactorList, H2, Loading, Meter, TierTag } from "@/components/ui";
 import { NAKSHATRA, PLANET_INFO, RASI, WEEKDAYS_TAMIL } from "@/lib/astro/constants";
 import { ordinal } from "@/lib/astro/chart";
@@ -16,6 +17,7 @@ import { fmtDate, fmtDateLong, fmtDuration, fmtTime } from "@/lib/astro/time";
 export default function NowPage() {
   const { ready, now, natal, profile } = useStore();
   const day = useToday();
+  const [saramCheck] = useStored<SaramCheck | null>(SARAM_KEY, null);
   const [picked, setPicked] = useState<Date | null>(null);
   const [activity, setActivity] = useState<ActivityKey>("overall");
 
@@ -25,6 +27,7 @@ export default function NowPage() {
   if (!ready || !day || !reading) return <Loading />;
 
   const tz = profile.here.tz;
+  const saram = saramCheck && now.getTime() - saramCheck.at < SARAM_FRESH_MS ? saramCheck : null;
   const tier = reading.tiers.overall;
   const block = blocks(day.segments, "overall").find((b) => at >= b.start && at < b.end);
   const allBlocks = blocks(day.segments, "overall");
@@ -223,6 +226,17 @@ export default function NowPage() {
               Your {ordinal(((reading.rising.value - natal.lagnaSign + 12) % 12) + 1)} house from {RASI[natal.lagnaSign].ta} lagna.
             </Item>
           )}
+          <Item term="Saram (breath)" href="/saram">
+            {saram ? (
+              <>
+                <strong>{FLOW[saram.flow].name}</strong>
+                <br />
+                Checked at {fmtTime(new Date(saram.at), tz)}. {saram.flow === "both" ? "Stay still until one side takes over." : saram.flow === "right" ? "Suits effort, contest and hard work." : "Suits lasting starts, money and asks."}
+              </>
+            ) : (
+              "Not checked in the last hour. Check which nostril is flowing."
+            )}
+          </Item>
           <Item term="Moon" href="/sky">
             <strong>
               {RASI[reading.moonSign].ta}, {NAKSHATRA[reading.star.value].ta}

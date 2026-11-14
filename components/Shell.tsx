@@ -7,10 +7,13 @@ import { useStore } from "./store";
 const NAV = [
   { href: "/", label: "Now", tamil: "இப்போது" },
   { href: "/day", label: "Day plan", tamil: "நாள்" },
+  { href: "/find", label: "Find a time", tamil: "முகூர்த்தம்" },
+  { href: "/saram", label: "Saram (breath)", tamil: "சரம்" },
   { href: "/pakshi", label: "Pancha Pakshi", tamil: "பட்சி" },
   { href: "/dasa", label: "Dasa", tamil: "தசை" },
   { href: "/sky", label: "Chart and transits", tamil: "கோசாரம்" },
   { href: "/money", label: "Money", tamil: "தனம்" },
+  { href: "/people", label: "People", tamil: "கூட்டு" },
   { href: "/setup", label: "Setup and method", tamil: "அமைப்பு" },
 ];
 

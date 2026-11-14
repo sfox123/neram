@@ -6,102 +6,8 @@ import { H2, Loading, PageTitle } from "@/components/ui";
 import { buildNatal, DEFAULT_PROFILE, Profile } from "@/lib/astro/chart";
 import { NAKSHATRA, PLANET_INFO, RASI } from "@/lib/astro/constants";
 import { Bird, BIRDS } from "@/lib/astro/pakshi";
-import { Place } from "@/lib/astro/panchang";
-
-const PLACES: Place[] = [
-  { name: "Colombo, Sri Lanka", latitude: 6.9271, longitude: 79.8612, tz: "Asia/Colombo" },
-  { name: "Jaffna, Sri Lanka", latitude: 9.6615, longitude: 80.0255, tz: "Asia/Colombo" },
-  { name: "Kandy, Sri Lanka", latitude: 7.2906, longitude: 80.6337, tz: "Asia/Colombo" },
-  { name: "Batticaloa, Sri Lanka", latitude: 7.7102, longitude: 81.6924, tz: "Asia/Colombo" },
-  { name: "Chennai, India", latitude: 13.0827, longitude: 80.2707, tz: "Asia/Kolkata" },
-  { name: "Hyderabad, India", latitude: 17.385, longitude: 78.4867, tz: "Asia/Kolkata" },
-  { name: "Singapore", latitude: 1.3521, longitude: 103.8198, tz: "Asia/Singapore" },
-  { name: "Dubai, UAE", latitude: 25.2048, longitude: 55.2708, tz: "Asia/Dubai" },
-  { name: "London, UK", latitude: 51.5072, longitude: -0.1276, tz: "Europe/London" },
-];
-
-function PlaceFields({ legend, value, onChange, allowDevice }: { legend: string; value: Place; onChange: (p: Place) => void; allowDevice?: boolean }) {
-  const [status, setStatus] = useState("");
-  const preset = PLACES.find((p) => p.name === value.name && p.latitude === value.latitude);
-  const useDevice = () => {
-    if (!navigator.geolocation) return setStatus("This browser does not share location.");
-    setStatus("Asking your browser for the location…");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        onChange({
-          name: "My location",
-          latitude: +pos.coords.latitude.toFixed(4),
-          longitude: +pos.coords.longitude.toFixed(4),
-          tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        });
-        setStatus("Location set from this device.");
-      },
-      () => setStatus("Location was not shared. Pick a city or type the coordinates."),
-    );
-  };
-  return (
-    <fieldset className="border-t border-line pt-5">
-      <legend className="display float-left mb-4 w-full text-xl">{legend}</legend>
-      <div className="clear-both grid gap-4 sm:grid-cols-2">
-        <label className="block sm:col-span-2">
-          <span className="mb-1 block text-sm text-mute">City</span>
-          <select
-            value={preset ? preset.name : "custom"}
-            onChange={(e) => {
-              const p = PLACES.find((x) => x.name === e.target.value);
-              if (p) onChange(p);
-              else onChange({ ...value, name: value.name === preset?.name ? "Custom place" : value.name });
-            }}
-          >
-            {PLACES.map((p) => (
-              <option key={p.name}>{p.name}</option>
-            ))}
-            <option value="custom">Somewhere else (type coordinates)</option>
-          </select>
-        </label>
-        {!preset && (
-          <>
-            <label className="block sm:col-span-2">
-              <span className="mb-1 block text-sm text-mute">Name shown in the app</span>
-              <input type="text" value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm text-mute">Latitude (north positive)</span>
-              <input type="number" step="0.0001" value={value.latitude} onChange={(e) => onChange({ ...value, latitude: +e.target.value })} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm text-mute">Longitude (east positive)</span>
-              <input type="number" step="0.0001" value={value.longitude} onChange={(e) => onChange({ ...value, longitude: +e.target.value })} />
-            </label>
-            <label className="block sm:col-span-2">
-              <span className="mb-1 block text-sm text-mute">Time zone (IANA name, such as Asia/Colombo)</span>
-              <input type="text" value={value.tz} onChange={(e) => onChange({ ...value, tz: e.target.value })} />
-            </label>
-          </>
-        )}
-      </div>
-      {allowDevice && (
-        <p className="mt-3 text-[0.95rem]">
-          <button type="button" onClick={useDevice} className="rounded border border-line px-3 py-1.5 hover:bg-panel">
-            Use this device&rsquo;s location
-          </button>
-          <span className="ml-3 text-mute" role="status">
-            {status}
-          </span>
-        </p>
-      )}
-    </fieldset>
-  );
-}
-
-function validTz(tz: string) {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { PlaceFields } from "@/components/PlaceFields";
+import { validTz } from "@/lib/places";
 
 export default function SetupPage() {
   const { ready } = useStore();
@@ -277,6 +183,20 @@ function SetupForm() {
             2nd and 11th lords, and Guru and Sani changing sign.
           </p>
           <p>
+            <strong>Ashtakavarga.</strong> Each birth planet and the lagna give points to certain signs (337 in all). The points in the sign the Moon is
+            crossing add or take up to 5 from the score. The full table is on the Chart page.
+          </p>
+          <p>
+            <strong>Saram.</strong> The nostril your breath is flowing through is something only you can check, so it is not part of the score. The Saram
+            page sets it beside the time verdict: left (Chandra kalai) for lasting, gentle, auspicious things; right (Surya kalai) for effort and contest;
+            both (Suzhumunai) for stillness. The dawn expectation follows the Tamil weekday rule, with the Siva Swarodaya tithi rule shown alongside.
+          </p>
+          <p>
+            <strong>People.</strong> Two charts are compared in three ways: eight of the ten poruthams from the birth stars (the two defined only for bride
+            and groom are left out), chart overlay with Guru&rsquo;s sight weighted most, and Pancha Pakshi bird friendship. Any two charts share a few good
+            links by chance, so the score treats that much as neutral.
+          </p>
+          <p>
             <strong>What this is.</strong> A faithful calculator for these traditions, for planning your day the way an almanac does. It has no way of knowing
             outcomes. For decisions about health, law or large sums, use it alongside real advice, not instead of it.
           </p>
@@ -293,6 +213,10 @@ function SetupForm() {
             ["Pancha Pakshi reference data used for cross-checking (PyJHora)", "https://github.com/naturalstupid/PyJHora"],
             ["Gowri panchangam order, after the Pambu panchangam (Drik Panchang)", "https://www.drikpanchang.com/tamil/tamil-gowri-panchangam.html"],
             ["Chandra Naadi, Tirupur S. Gopalakrishnan", "https://www.exoticindiaart.com/book/details/chandra-naadi-baf059/"],
+            ["Sara sastram: weekday rule and effects of each nostril (Maalaimalar)", "https://www.maalaimalar.com/health/others/kadhambam/tamil-news-kadhambam-sangati-singing-strings-685298"],
+            ["Sara sastram: directions and switching sides (Sitharkal Sankamam)", "http://sitharkalsankamam.blogspot.com/2013/07/blog-post_12.html"],
+            ["Siva Swarodaya tithi and sunrise rule (Swara Yoga)", "https://www.swarayoga.org/SwaraCycle.htm"],
+            ["The ten poruthams explained (Hindutone)", "https://hindutone.com/astrology/porutham-10-poruthams-south-indian-marriage-matching/"],
             ["Astronomy Engine, the ephemeris library", "https://github.com/cosinekitty/astronomy"],
           ].map(([text, href]) => (
             <li key={href}>

@@ -114,3 +114,54 @@ function buildDay(natal: Natal, dateKey: string): DayData {
   const ctx = dayContext(natal, frame);
   return { frame, ctx, segments: timeline(ctx) };
 }
+
+// ---- Small saved lists (people, breath check) -------------------------------------------------
+
+const storedListeners = new Set<() => void>();
+const storedMemory = new Map<string, string>();
+function subscribeStored(cb: () => void) {
+  storedListeners.add(cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    storedListeners.delete(cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+
+/** A JSON value kept in this browser's local storage. Returns [value, save]. */
+export function useStored<T>(key: string, fallback: T): [T, (v: T) => void] {
+  const raw = useSyncExternalStore(
+    subscribeStored,
+    () => {
+      try {
+        return window.localStorage.getItem(key) ?? storedMemory.get(key) ?? null;
+      } catch {
+        return storedMemory.get(key) ?? null;
+      }
+    },
+    () => null,
+  );
+  const value = useMemo<T>(() => {
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return fallback;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raw]);
+  const save = useCallback(
+    (v: T) => {
+      const text = JSON.stringify(v);
+      storedMemory.set(key, text);
+      try {
+        window.localStorage.setItem(key, text);
+      } catch {
+        // Private mode: kept for this visit only.
+      }
+      storedListeners.forEach((l) => l());
+    },
+    [key],
+  );
+  return [value, save];
+}

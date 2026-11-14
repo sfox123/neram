@@ -32,8 +32,11 @@ It deploys to Vercel as a plain Next.js app with no configuration.
 | Day plan | Any date: every activity across the day, best windows, hour-by-hour list, full panchangam, hora and Gowri tables |
 | Pancha Pakshi | Your bird, its friends and enemies, all ten yamas with their five sub-periods and ratings |
 | Dasa | Running dasa, bhukti, antaram and sookshma with dates, and what each lord rules in your chart |
-| Chart and transits | Birth chart, today's sky, Chandra Naadi, planets crossing natal planets, gochara, Elarai Sani, sign changes ahead |
+| Chart and transits | Birth chart, today's sky, Chandra Naadi, planets crossing natal planets, gochara, Elarai Sani, Ashtakavarga, sign changes ahead |
 | Money | 30-day money signals, best money hours today, your money lords and Indu lagna, dasa periods and slow transits tied to income |
+| Find a time | Pick an activity and a range (3 to 30 days); lists the strongest windows ranked, and day by day |
+| Saram (breath) | Tell it which nostril is flowing; do's and don'ts, and how the breath sits with the time verdict |
+| People | Add someone's birth details; what the two charts do to each other (poruthams, Guru's sight, chart overlay, bird friendship) |
 | Setup and method | Birth details, current location, how the score is built, sources |
 
 ## Where the logic lives
@@ -47,6 +50,9 @@ lib/astro/
   pakshi.ts      Pancha Pakshi tables, yamas and sub-periods
   transits.ts    tara bala, chandra bala, gochara, Chandra Naadi, contacts, sign changes
   wealth.ts      money signals
+  ashtaka.ts     Ashtakavarga points per sign
+  match.ts       two-chart comparison (koottu vilaivu)
+  saram.ts       Sara vithai rules
   score.ts       muhurtha lagna, and the weights that combine everything into 0-100 scores  <- tune here
 ```
 

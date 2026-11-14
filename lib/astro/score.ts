@@ -16,6 +16,7 @@ import {
   WEEKDAYS,
   houseFrom,
 } from "./constants";
+import { ashtakavarga, savGrade } from "./ashtaka";
 import { functionalRole, Natal, ordinal, rulesText } from "./chart";
 import { runningDasha, RunningDasha } from "./dasha";
 import { allPositions, Positions } from "./ephemeris";
@@ -102,6 +103,8 @@ export interface DayContext {
   contacts: Contact[];
   dasha: RunningDasha | null;
   useLagna: boolean;
+  /** Sarvashtakavarga points per sign; null until the birth time is known. */
+  sav: number[] | null;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -117,6 +120,7 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     contacts: contacts(natal, positions, mid),
     dasha: runningDasha(natal.mahas, mid),
     useLagna: natal.profile.timeConfirmed,
+    sav: natal.profile.timeConfirmed ? ashtakavarga(natal).sav : null,
   };
 }
 
@@ -447,6 +451,25 @@ function moonFactors(ctx: DayContext, r: Pick<Reading, "tithi" | "star" | "yoga"
   return out;
 }
 
+// Ashtakavarga: how many points your chart gives the sign the Moon is crossing.
+function savFactor(ctx: DayContext, moonSign: number): Factor[] {
+  if (!ctx.sav) return [];
+  const pts = ctx.sav[moonSign];
+  const grade = savGrade(pts);
+  if (grade === "average") return [];
+  const v = grade === "strong" ? 5 : grade === "fair" ? 3 : grade === "weak" ? -3 : -5;
+  return [
+    {
+      id: "sav",
+      source: "Ashtakavarga",
+      title: `Moon in a ${grade} sign of your chart (${pts} points)`,
+      detail: `${RASI[moonSign].ta} holds ${pts} of the 337 Sarvashtakavarga points in your chart (28 is average). ${v > 0 ? "Transits through a well-supplied sign give more." : "Transits through a thin sign give less, whatever else looks good."}`,
+      tone: v > 0 ? "good" : "bad",
+      effect: eff(v),
+    },
+  ];
+}
+
 // The sign rising at the moment (the muhurtha lagna), judged from the birth lagna and rasi.
 function risingFactors(ctx: DayContext, rising: Span<number>): Factor[] {
   if (!ctx.useLagna) return [];
@@ -584,6 +607,7 @@ export function readAt(ctx: DayContext, t: Date): Reading {
     ...fixedPeriodFactors(ctx, t, g),
     ...moonFactors(ctx, { tithi, star, yoga, karana, moonSign, tara, chandra }),
     ...risingFactors(ctx, rising),
+    ...savFactor(ctx, moonSign),
     ...chartFactors(ctx, naadi),
   ];
 
@@ -683,10 +707,12 @@ export function blocks(segments: Segment[], key: ActivityKey): Block[] {
 export function bestWindows(segments: Segment[], key: ActivityKey, after?: Date, minMinutes = 15, count = 4): Block[] {
   // Treat "go" and "good" as one favourable stretch so a window is not chopped up needlessly.
   const merged: Block[] = [];
+  const BRIDGE_MS = 2 * 60000; // a blip shorter than this does not split a window
   for (const b of blocks(segments, key)) {
     const fav = b.tier === "go" || b.tier === "good";
+    if (!fav && b.end.getTime() - b.start.getTime() < BRIDGE_MS) continue;
     const last = merged[merged.length - 1];
-    if (fav && last && (last.tier === "go" || last.tier === "good") && last.end.getTime() === b.start.getTime()) {
+    if (fav && last && (last.tier === "go" || last.tier === "good") && b.start.getTime() - last.end.getTime() <= BRIDGE_MS) {
       const d1 = last.end.getTime() - last.start.getTime();
       const d2 = b.end.getTime() - b.start.getTime();
       last.score = Math.round((last.score * d1 + b.score * d2) / (d1 + d2));
