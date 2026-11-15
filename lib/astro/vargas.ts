@@ -16,6 +16,7 @@ import { houseTopic, Natal, ordinal } from "./chart";
 import { houseFrom, norm360, PLANET_INFO, PlanetId, PLANETS, RASI, signOf } from "./constants";
 import { Dignity, dignity } from "./dignity";
 import { lagnaLongitude } from "./ephemeris";
+import { pushkaraBhaga, PushkaraHit, pushkaraNavamsa } from "./pushkara";
 
 export type VargaKind = "D9" | "D10";
 
@@ -142,6 +143,10 @@ export interface VargaStrength {
   career: number;
   word: VargaWord;
   note: string;
+  /** In one of the 24 pushkara navamsas. */
+  pushkara: PushkaraHit | null;
+  /** Distance from the sign's pushkara degree, if within a degree of it. */
+  bhaga: number | null;
 }
 
 const NODE: PlanetId[] = ["Ra", "Ke"];
@@ -190,7 +195,12 @@ export function vargaStrength(n: Natal): Record<PlanetId, VargaStrength> {
     }
     if (!node && (b.dignity === "exalted" || b.dignity === "own")) note += ` ${b.dignity === "exalted" ? "Exalted" : "In its own sign"} in the dasamsa${a.dignity === "exalted" || a.dignity === "own" ? " too" : ""}: strong for career.`;
     if (!node && b.dignity === "debilitated") note += " Debilitated in the dasamsa: its career matters need extra pushing.";
-    out[p] = { planet: p, vargottama: a.sameSign, d1: a.d1Dignity, d9: a.dignity, d10: b.dignity, inner, career, word, note };
+    const pushkara = pushkaraNavamsa(n.positions[p]);
+    const bhaga = pushkaraBhaga(n.positions[p]);
+    if (pushkara) note += ` In a pushkara navamsa (${RASI[pushkara.navamsa].ta}): nourished, so it gives well and steadily.`;
+    else if (bhaga !== null) note += " On its sign's pushkara degree, which adds some of the same nourishment.";
+    const lift = (pushkara ? 0.75 : 0) + (bhaga !== null ? 0.25 : 0);
+    out[p] = { planet: p, vargottama: a.sameSign, d1: a.d1Dignity, d9: a.dignity, d10: b.dignity, inner: inner + lift, career, word, note, pushkara, bhaga };
   }
   return out;
 }

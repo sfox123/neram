@@ -29,11 +29,11 @@ It deploys to Vercel as a plain Next.js app with no configuration.
 | Page | What it shows |
 | --- | --- |
 | Now | The verdict for this minute (Go, Good, Steady, Hold, Wait), per-activity scores, the day as a skyline, the reasons, do's and don'ts, best windows ahead |
-| Day plan | Any date: every activity across the day, best windows, hour-by-hour list, full panchangam, hora and Gowri tables |
+| Day plan | Any date: every activity across the day, best windows, the day's pushkara windows (rising lagna in a nourishing navamsa), hour-by-hour list, full panchangam, hora and Gowri tables |
 | Pancha Pakshi | Your bird, its friends and enemies, all ten yamas with their five sub-periods and ratings |
 | Dasa | Running dasa, bhukti, antaram and sookshma with dates, what each lord rules in your chart, and how strong each lord is in today's sky (gocharam) |
 | Yogi and avayogi | Yogi, Sahayogi and Avayogi planets and stars, Moon and planet passes over them, karana nathan, HD and LD planets, upasana deivam |
-| Navamsa, Dasamsa | Rasi, navamsa (D9) and dasamsa (D10) charts side by side, vargottama planets, each planet's dignity across the three, the inner-person and career readings, and how firm each amsa lagna is against your birth minute |
+| Navamsa, Dasamsa | Rasi, navamsa (D9) and dasamsa (D10) charts side by side, vargottama planets, pushkara navamsa and pushkara degrees, each planet's dignity across the three, the inner-person and career readings, and how firm each amsa lagna is against your birth minute |
 | Yogas | Pancha Mahapurusha, raja, dhana and other yogas found in your chart; how each is formed, what weakens or helps it, when its planets' periods switch it on, how to use it |
 | Strengthen and recover | What is weighing on this hour or day and its fix, a reset routine for a bad day, and each planet's practice (strengthen, settle or honour) ranked by need |
 | Chart and transits | Birth chart, today's sky, Chandra Naadi, planets crossing natal planets, gochara, Elarai Sani, Ashtakavarga, sign changes ahead |
@@ -64,6 +64,7 @@ lib/astro/
   marriage.ts    marriage: promise, pace, love or arranged, Sevvai dosham, partner sketch, windows from dasa and transits
   travel.ts      foreign travel: natal promise, travel planets, windows from dasa and transits, departure days
   indu.ts        Indu lagna: working, reading, wealth-producing planets, transits over it
+  pushkara.ts    pushkara navamsa and pushkara bhaga: birth chart, and the day's lagna and Moon windows
   vargas.ts      navamsa and dasamsa signs, vargottama, amsa strength, birth-minute sensitivity, readings
   yogas.ts       yoga detection, activation by dasa periods, Guru and Sani triggers
   dashaTransit.ts  the dasa, bhukti and antaram lords judged in the current sky

@@ -13,6 +13,7 @@ import { RunningDasha } from "./dasha";
 import { aspects, Dignity, dignity, isCombust } from "./dignity";
 import { Positions, siderealLongitude } from "./ephemeris";
 import { nextSignChange } from "./panchang";
+import { pushkaraNavamsa } from "./pushkara";
 import { gochara, Tone } from "./transits";
 import { starRelation, YogiInfo } from "./yogi";
 
@@ -111,6 +112,9 @@ export function lordTransit(n: Natal, y: YogiInfo, level: LordTransit["level"], 
   }
   if (houseFromNatal === 1 && lord !== "Mo") points.push({ label: "Back at its birth place", detail: `${name} has returned to the sign it held at your birth, which renews what it stands for.`, value: 0.5 });
   if ([6, 8, 12].includes(houseFromNatal)) points.push({ label: `${ordinal(houseFromNatal)} from its birth place`, detail: "Out of step with its own birth position; expect some friction in delivery.", value: -0.5 });
+
+  const pk = pushkaraNavamsa(pos[lord]);
+  if (pk) points.push({ label: "In a pushkara navamsa", detail: `Passing through a nourishing navamsa (${RASI[pk.navamsa].ta}): it gives more easily, or does less harm, for the days or weeks it stays.`, value: 0.75 });
 
   const rel = starRelation(y, star);
   if (rel === "yoga-tara") points.push({ label: `In your yoga tara ${NAKSHATRA[star].ta}`, detail: "Passing through your luckiest star.", value: 1 });

@@ -163,7 +163,7 @@ export default function NowPage() {
       <div className="mt-10 grid gap-x-12 gap-y-10 lg:grid-cols-[1.15fr_1fr]">
         {/* Why */}
         <section>
-          <H2 tamil="ஏன்" aside={`Score ${reading.scores[activity]} of 100, starting from 50`}>Why</H2>
+          <H2 tamil="ஏன்" aside={`Score ${reading.scores[activity]} of 100, starting from 49`}>Why</H2>
           <FactorList factors={reading.factors} activity={activity} limit={8} />
           <p className="mt-3 text-sm text-mute">
             Each line adds to or takes from the score.{" "}

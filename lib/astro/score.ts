@@ -4,6 +4,7 @@
 // The weights are a judgement about how much each tradition should count. They are kept
 // in one place (this file) so they are easy to read and change.
 
+import { DayPushkara, dayPushkara, pushkaraAt, PushkaraSpan } from "./pushkara";
 import { TravelPromise, travelPromise } from "./travel";
 import { InduReading, induReading, induWeight } from "./indu";
 import { VargaStrength, vargaStrength } from "./vargas";
@@ -120,6 +121,8 @@ export interface DayContext {
   indu: InduReading | null;
   /** What the birth chart says about travel, and which planets carry it. */
   travel: TravelPromise | null;
+  /** When the rising lagna and the Moon are in a pushkara navamsa today. */
+  pushkara: DayPushkara;
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -144,10 +147,46 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     amsa: useLagna ? vargaStrength(natal) : null,
     indu: useLagna ? induReading(natal) : null,
     travel: useLagna ? travelPromise(natal) : null,
+    pushkara: dayPushkara(frame),
   };
 }
 
 // ---- Individual factor builders -----------------------------------------------------------
+
+/** Pushkara navamsa: the Moon in one lifts the whole stretch; the rising lagna in one marks the minutes to act. */
+function pushkaraFactors(ctx: DayContext, lagna: PushkaraSpan | null, moon: PushkaraSpan | null): Factor[] {
+  const out: Factor[] = [];
+  const n = ctx.natal;
+  const tz = ctx.frame.place.tz;
+  // A pushkara navamsa that falls in the 6th, 8th or 12th from your own lagna (or Moon) gives only half.
+  const ref = ctx.useLagna ? n.lagnaSign : n.moonSign;
+  const dim = (sign: number) => [6, 8, 12].includes(houseFrom(ref, sign));
+  if (moon) {
+    const half = dim(moon.navamsa);
+    const v = half ? 1.25 : 2.5;
+    out.push({
+      id: "pushkara-moon",
+      source: "Pushkara navamsa",
+      title: "Moon in a pushkara navamsa",
+      detail: `The Moon is in the ${RASI[moon.navamsa].ta} navamsa of ${RASI[moon.sign].ta} until ${fmtTime(moon.end, tz)}, one of the 24 nourishing navamsas: what is begun now is helped to grow${half ? `. ${RASI[moon.navamsa].ta} is a hidden house for you, so it counts at half` : ""}.`,
+      tone: "good",
+      effect: eff(v, { start: v + 1 }),
+    });
+  }
+  if (lagna && ctx.useLagna) {
+    const half = dim(lagna.navamsa);
+    const k = half ? 0.5 : 1;
+    out.push({
+      id: "pushkara-lagna",
+      source: "Pushkara navamsa",
+      title: moon ? "Pushkara lagna, with the Moon in pushkara too" : "Pushkara lagna",
+      detail: `The rising lagna is in the ${RASI[lagna.navamsa].ta} navamsa of ${RASI[lagna.sign].ta} from ${fmtTime(lagna.start, tz)} to ${fmtTime(lagna.end, tz)}. This is the classical choice of minutes for fixing the moment of an act: send, sign or set out inside it${moon ? ". With the Moon also in pushkara this is a double pushkara, the best of these windows" : ""}${half ? `. ${RASI[lagna.navamsa].ta} is a hidden house for you, so it counts at half` : ""}.`,
+      tone: "good",
+      effect: eff((2.5 + (moon ? 1.5 : 0)) * k, { start: (5 + (moon ? 1.5 : 0)) * k, apply: (4.5 + (moon ? 1.5 : 0)) * k, travel: (3.5 + (moon ? 1 : 0)) * k }),
+    });
+  }
+  return out;
+}
 
 function pakshiFactors(ctx: DayContext, yama: PakshiYama, sub: PakshiSub): Factor[] {
   const p = sub.power;
@@ -753,6 +792,8 @@ export function readAt(ctx: DayContext, t: Date): Reading {
   const tara = taraBala(ctx.natal.star, star.value);
   const chandra = chandraBala(ctx.natal.moonSign, moonSign, waxing);
   const naadi = chandraNaadi(ctx.natal, moonSign);
+  const pkLagna = ctx.useLagna ? pushkaraAt(ctx.pushkara.lagna, t) : null;
+  const pkMoon = pushkaraAt(ctx.pushkara.moon, t);
 
   const factors = [
     ...pakshiFactors(ctx, yama, sub),
@@ -760,12 +801,15 @@ export function readAt(ctx: DayContext, t: Date): Reading {
     ...fixedPeriodFactors(ctx, t, g),
     ...moonFactors(ctx, { tithi, star, yoga, karana, moonSign, tara, chandra }),
     ...risingFactors(ctx, rising),
+    ...pushkaraFactors(ctx, pkLagna, pkMoon),
     ...savFactor(ctx, moonSign),
     ...yogiFactors(ctx, star, hora),
     ...chartFactors(ctx, naadi),
   ];
 
-  const scores = eff(50);
+  // Every moment starts at 49. It was 50 before the pushkara factors were added: they only ever add,
+  // about one point on average across a day, so the base is lowered by that to keep the tiers where they were.
+  const scores = eff(49);
   for (const f of factors) for (const k of KEYS) scores[k] += f.effect[k];
   // Hard ceilings: some conditions should never read as a green light, however good the rest is.
   const base = sub.power < 0.09 || chandra.chandrashtama ? 52 : sub.power < 0.17 ? 62 : 100; // thresholds sit between the possible products
@@ -814,6 +858,8 @@ export function timeline(ctx: DayContext): Segment[] {
   for (const r of [p.rahu, p.yamagandam, p.gulika, p.abhijit]) { add(r?.start); add(r?.end); }
   for (const list of [p.tithi, p.nakshatra, p.yoga, p.karana, p.moonSign]) for (const s of list) add(s.end);
   if (ctx.useLagna) for (const s of p.rising) add(s.end);
+  if (ctx.useLagna) for (const s of ctx.pushkara.lagna) { add(s.start); add(s.end); }
+  for (const s of ctx.pushkara.moon) { add(s.start); add(s.end); }
   const sorted = [...cuts].sort((a, b) => a - b);
   const out: Segment[] = [];
   for (let i = 0; i < sorted.length - 1; i++) {

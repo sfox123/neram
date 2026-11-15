@@ -6,7 +6,8 @@ import { useDay, useStore } from "@/components/store";
 import { DateStepper, H2, Loading, PageTitle, TierTag } from "@/components/ui";
 import { PLANET_INFO, RASI, WEEKDAYS, WEEKDAYS_TAMIL } from "@/lib/astro/constants";
 import { GOWRI_INFO, label, Span } from "@/lib/astro/panchang";
-import { ACTIVITIES, ActivityKey, bestWindows, blocks, TIER } from "@/lib/astro/score";
+import { pushkaraAt } from "@/lib/astro/pushkara";
+import { ACTIVITIES, ActivityKey, bestWindows, blocks, readAt, TIER } from "@/lib/astro/score";
 import { dateKey, fmtDuration, fmtTime } from "@/lib/astro/time";
 
 export default function DayPage() {
@@ -91,6 +92,59 @@ export default function DayPage() {
           </table>
         </div>
       </section>
+
+      {profile.timeConfirmed && (
+        <section className="mt-12">
+          <H2 aside="the rising lagna in a nourishing navamsa">Pushkara windows</H2>
+          <p className="mb-4 max-w-[72ch] text-[0.95rem] text-mute">
+            About every two hours the rising lagna passes through two pushkara navamsas of twelve to fifteen minutes each. They are the classical
+            choice of minutes for the act itself: sending, signing, paying, setting out. Use one that falls inside a good stretch of the day; the
+            tier beside each shows how the rest of the hour reads.
+            {day.ctx.pushkara.moon.length > 0 && (
+              <>
+                {" "}
+                The Moon is itself in a pushkara navamsa{" "}
+                {day.ctx.pushkara.moon.map((m, i) => (
+                  <span key={i}>
+                    {i > 0 ? " and " : ""}
+                    <strong className="text-ink">
+                      {t(m.start)} to {t(m.end)}
+                    </strong>
+                  </span>
+                ))}
+                : windows inside that are double pushkara.
+              </>
+            )}
+          </p>
+          <ul className="grid gap-x-10 border-t border-line sm:grid-cols-2 xl:grid-cols-3">
+            {day.ctx.pushkara.lagna
+              .filter((w) => w.end.getTime() - w.start.getTime() >= 4 * 60000)
+              .map((w) => {
+                const mid = new Date((w.start.getTime() + w.end.getTime()) / 2);
+                const r = readAt(day.ctx, mid);
+                const double = !!pushkaraAt(day.ctx.pushkara.moon, mid);
+                const exact = day.ctx.pushkara.bhaga.find((b) => b.at >= w.start && b.at < w.end);
+                const past = isToday && w.end < now;
+                const live = isToday && w.start <= now && now < w.end;
+                return (
+                  <li key={w.start.getTime()} className={`flex items-baseline justify-between gap-3 border-b border-line py-2.5 text-[0.95rem] ${past ? "opacity-45" : ""}`}>
+                    <span>
+                      <span className={`tabular-nums ${live ? "font-semibold text-go" : "font-semibold"}`}>
+                        {t(w.start)} to {t(w.end)}
+                      </span>
+                      <span className="block text-sm text-mute">
+                        {RASI[w.sign].ta} rising, {RASI[w.navamsa].ta} navamsa
+                        {double ? ", double pushkara" : ""}
+                        {exact ? `, exact degree at ${t(exact.at)}` : ""}
+                      </span>
+                    </span>
+                    <TierTag tier={r.tiers.overall} />
+                  </li>
+                );
+              })}
+          </ul>
+        </section>
+      )}
 
       <div className="mt-12 grid gap-x-12 gap-y-12 lg:grid-cols-[1.1fr_1fr]">
         <section>

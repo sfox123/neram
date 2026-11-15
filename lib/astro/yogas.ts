@@ -84,6 +84,7 @@ export function findYogas(n: Natal): Yoga[] {
       else if (a.d9 === "own") m.push(`${N(p)} is in its own sign in the navamsa, which backs the yoga.`);
       else if (a.d9 === "debilitated") m.push(`${N(p)} is debilitated in the navamsa (${a.d1 === "exalted" ? "exalted in rasi, fallen in amsa" : "fallen in amsa"}): the yoga is real but gives unevenly, and less than the rasi chart alone suggests.`);
     }
+    if (a.pushkara) m.push(`${N(p)} is in a pushkara navamsa, which nourishes the yoga and helps it give steadily.`);
     const st = y.standing[p];
     if (st.boost >= 2) m.push(`${N(p)} ${st.reasons.join(" and ")}, which adds luck to the yoga.`);
     if (st.boost <= -1.5) m.push(`${N(p)} ${st.reasons.join(" and ")}, which puts a brake on the yoga.`);

@@ -5,8 +5,10 @@ import Link from "next/link";
 import { RasiChart } from "@/components/RasiChart";
 import { useStore } from "@/components/store";
 import { H2, LineList, Loading, PageTitle } from "@/components/ui";
-import { PLANET_INFO, PlanetId, PLANETS, RASI } from "@/lib/astro/constants";
+import { houseTopic, ordinal } from "@/lib/astro/chart";
+import { formatDeg, PLANET_INFO, PlanetId, PLANETS, RASI, signOf } from "@/lib/astro/constants";
 import { Dignity } from "@/lib/astro/dignity";
+import { natalPushkara, PUSHKARA_BHAGA } from "@/lib/astro/pushkara";
 import { fmtDateLong, MS_DAY } from "@/lib/astro/time";
 import {
   buildVarga,
@@ -193,6 +195,68 @@ export default function VargasPage() {
           </Link>
           , and the weight of your running bhukti and antaram lords in the scores.
         </p>
+      </section>
+
+      <section className="mt-14">
+        <H2 aside="the nourishing navamsas and degrees">Pushkara navamsa and pushkara bhaga</H2>
+        <p className="max-w-[72ch] text-[0.98rem]">
+          Two of the nine navamsas in every sign are pushkara, &ldquo;that which nourishes&rdquo;: 24 of the 108, each ruled by Guru, Sukran, Chandran or
+          Budhan. A planet in one gives well and steadily, even when the rasi chart shows it weak; some authorities rank it with vargottama. Each sign
+          also has one pushkara degree (bhaga) of the same quality.
+        </p>
+        {(() => {
+          const rows = natalPushkara(natal);
+          const hits = rows.filter((r) => r.hit || r.bhaga !== null);
+          return (
+            <>
+              {hits.length === 0 ? (
+                <p className="mt-4 max-w-[72ch] text-mute">None of your planets or your lagna falls in a pushkara navamsa or on a pushkara degree. That is the usual case: only about one point in five does.</p>
+              ) : (
+                <ul className="mt-5 border-t border-line">
+                  {hits.map((r) => {
+                    const planet = r.key === "Lagna" ? null : (r.key as PlanetId);
+                    const rules = planet ? natal.rules[planet] : [];
+                    return (
+                      <li key={r.key} className="grid gap-x-8 gap-y-1 border-b border-line py-4 md:grid-cols-[17rem_1fr]">
+                        <span className="font-semibold">
+                          {r.name}
+                          <span className="block text-sm font-normal text-mute">
+                            {RASI[signOf(r.lon)].ta} {formatDeg(r.lon % 30)}
+                          </span>
+                        </span>
+                        <span className="max-w-[68ch] text-[0.98rem] text-mute">
+                          {r.hit && (
+                            <>
+                              <strong className="text-go">In a pushkara navamsa</strong>, the {RASI[r.hit.navamsa].ta} navamsa ruled by {PLANET_INFO[r.hit.ruler].ta}.{" "}
+                            </>
+                          )}
+                          {r.bhaga !== null && (
+                            <>
+                              <strong className="text-go">{r.bhaga <= 0.5 ? "On the pushkara degree" : "Near the pushkara degree"}</strong> of {RASI[signOf(r.lon)].ta} ({PUSHKARA_BHAGA[signOf(r.lon)]}°), {formatDeg(r.bhaga)} away.{" "}
+                            </>
+                          )}
+                          {planet && rules.length > 0
+                            ? `${r.name} rules your ${rules.map(ordinal).join(" and ")}, so ${rules.length > 1 ? "those houses'" : "that house's"} matters (${rules.map((h) => houseTopic(h).split(/[,;]/)[0]).join("; ")}) are fed by it: they tend to recover from setbacks and grow with time.`
+                            : planet
+                              ? `What ${r.name} touches in your chart is steadied by it.`
+                              : "A pushkara lagna is counted a lasting support for the whole chart."}
+                          {planet && r.hit && r.bhaga !== null ? " Holding both the navamsa and the degree is the strongest form." : ""}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              <p className="mt-3 max-w-[72ch] text-sm text-mute">
+                Not in pushkara: {rows.filter((r) => !r.hit && r.bhaga === null).map((r) => r.name).join(", ")}. The same navamsas are used for timing: the{" "}
+                <Link href="/day" className="underline">
+                  Day plan
+                </Link>{" "}
+                lists the minutes when the rising lagna and the Moon pass through them, and they now count in the scores.
+              </p>
+            </>
+          );
+        })()}
       </section>
 
       <section className="mt-14">

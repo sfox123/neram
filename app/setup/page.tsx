@@ -153,7 +153,7 @@ function SetupForm() {
             to within a minute. Rahu and Ketu are the mean nodes. Houses are whole signs from the lagna.
           </p>
           <p>
-            <strong>Score.</strong> Every moment starts at 50 and each factor adds or subtracts. The largest weights go to Pancha Pakshi (up to ±24), Chandrashtamam
+            <strong>Score.</strong> Every moment starts at 49 and each factor adds or subtracts. The largest weights go to Pancha Pakshi (up to ±24), Chandrashtamam
             (−18), Rahu kalam (−12), tara bala (up to ±12), hora (±8) and Gowri (±8). Rahu kalam, a dying sub-period and Chandrashtamam also cap the score so they
             can never read as a green light. 75 and above reads Go, 60 Good, 46 Steady, 34 Hold, below that Wait. The weights live in{" "}
             <code>lib/astro/score.ts</code> if you want to tune them.
@@ -240,6 +240,15 @@ function SetupForm() {
             when a bhukti changes. Each moment is ranked against your years from 21 to 60. Career windows do not change the daily scores.
           </p>
           <p>
+            <strong>Pushkara navamsa.</strong> Two navamsas in each sign are pushkara: the 7th and 9th in fire signs, the 3rd and 5th in earth signs,
+            the 6th and 8th in air signs, the 1st and 3rd in water signs. Each sign also has a pushkara degree (Mesham 21, Rishabam 14, Mithunam 18,
+            Kadagam 8, Simmam 19, Kanni 9, Thulam 24, Viruchigam 11, Dhanusu 23, Makaram 14, Kumbam 19, Meenam 9), counted here within one degree. In
+            the birth chart a planet in pushkara gains amsa strength. In timing, the Moon in a pushkara navamsa adds 2.5 points and the rising lagna in
+            one adds 2.5 (5 for starting things, 4.5 for applications), with 1.5 more when both hold; a pushkara navamsa that is the 6th, 8th or 12th
+            sign from your lagna counts at half. Because these only ever add, the starting score was lowered from 50 to 49 so the share of each tier
+            stays the same.
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -303,6 +312,9 @@ function SetupForm() {
             ["Job or business: the 6th house against the 7th (AstroMedha)", "https://astromedha.in/insights/vedic/business-or-job-which-suits-me"],
             ["Amatyakaraka, the career significator (Vedic Marga)", "https://vedicmarga.com/amatyakaraka-calculator/"],
             ["Career in Vedic astrology: double transit on the 10th (Dekho Panchang)", "https://dekhopanchang.com/en/learn/career"],
+            ["Pushkara navamsa and pushkara bhaga: the table by sign (AAPS)", "https://aaps.space/docs/navamsa/pushkara-navamsa/"],
+            ["Notes on navamsa and pushkara navamsa, with the Jataka Parijata degrees", "https://www.slideshare.net/slideshow/cedic-astrologynavamsa-and-pushkar-navamsa/44527771"],
+            ["Lagna times with pushkaramsa for muhurtha (OnlineJyotish)", "https://www.onlinejyotish.com/astrology-tools/today-lagna-times.php"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],

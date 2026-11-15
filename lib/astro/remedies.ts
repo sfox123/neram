@@ -164,6 +164,7 @@ export function planetCare(n: Natal, y: YogiInfo, g: DashaGocharam | null): Plan
       if (a.vargottama) { state.push("vargottama"); weak = Math.max(0, weak - 1); }
       else if (a.d9 === "exalted" || a.d9 === "own") { state.push(`${a.d9 === "exalted" ? "exalted" : "own sign"} in navamsa`); weak = Math.max(0, weak - 1); }
       else if (a.d9 === "debilitated") { state.push("debilitated in navamsa"); weak += 1.5; }
+      if (a.pushkara) { state.push("in a pushkara navamsa"); weak = Math.max(0, weak - 0.5); }
     }
 
     const lord = g?.lords.find((l) => l.lord === p) ?? null;
