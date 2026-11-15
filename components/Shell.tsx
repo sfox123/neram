@@ -20,6 +20,7 @@ const NAV = [
   { href: "/money", label: "Money", tamil: "தனம்" },
   { href: "/travel", label: "Travel abroad", tamil: "வெளிநாடு" },
   { href: "/marriage", label: "Marriage", tamil: "திருமணம்" },
+  { href: "/career", label: "Career", tamil: "தொழில்" },
   { href: "/people", label: "People", tamil: "கூட்டு" },
   { href: "/setup", label: "Setup and method", tamil: "அமைப்பு" },
 ];

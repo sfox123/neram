@@ -232,6 +232,14 @@ function SetupForm() {
             Sevvai is exalted or in its own sign, or joined or seen by Guru or Budhan.
           </p>
           <p>
+            <strong>Career.</strong> The promise is scored from the 10th house and its lord (with their navamsa and dasamsa dignity), the 6th and
+            11th lords, the lagna lord, Suriyan and Sani, the amatyakaraka (second in degree among the seven planets) and the career yogas. Employment
+            against own venture weighs the 6th lord and Sani&rsquo;s influence against Rahu in the 7th or 10th, ties between the 2nd and 11th lords and
+            between the 7th and 10th lords, and an active 3rd house. Timing adds the periods of the planets tied to these houses to the transits of
+            Guru and Sani over the 10th house, its lord, the 6th and the 11th, with extra weight for the double transit on the 10th and a small mark
+            when a bhukti changes. Each moment is ranked against your years from 21 to 60. Career windows do not change the daily scores.
+          </p>
+          <p>
             <strong>Remedies.</strong> The Strengthen and recover page is advice only and never changes a score. Helpers in your chart (Yogi, Sahayogi,
             lagna lord, yogakaraka) are strengthened; the Avayogi, difficult lords and the nodes are settled by giving and worship.
           </p>
@@ -290,6 +298,11 @@ function SetupForm() {
             ["Marriage timing and delay marks (AstroMedha)", "https://astromedha.in/insights/vedic/when-will-i-get-married"],
             ["Love or arranged: the 5th and 7th lords and Rahu (AstroMedha)", "https://astromedha.in/insights/vedic/love-marriage-or-arranged-marriage"],
             ["Kuja (Sevvai) dosham and its cancellations (OnlineJyotish)", "https://www.onlinejyotish.com/articles/marriage-matching/english/kuja-dosha-nivarana.php"],
+            ["Promotion timing: the period lord and Guru and Sani on the 10th (AstroMedha)", "https://astromedha.in/insights/career/astrology-for-promotion-timing"],
+            ["Job change: dasa links and Sani over the 10th house or lord (Kundli Matching)", "https://kundli-matching.com/blogs/how-can-we-predict-a-job-change-in-vedic-astrology/"],
+            ["Job or business: the 6th house against the 7th (AstroMedha)", "https://astromedha.in/insights/vedic/business-or-job-which-suits-me"],
+            ["Amatyakaraka, the career significator (Vedic Marga)", "https://vedicmarga.com/amatyakaraka-calculator/"],
+            ["Career in Vedic astrology: double transit on the 10th (Dekho Panchang)", "https://dekhopanchang.com/en/learn/career"],
             ["Dasa lords and Ashtakavarga points in transit (Dekho Panchang)", "https://dekhopanchang.com/en/learn/ashtakavarga-dasha"],
             ["Reading order: promise, dasa, transit, bindus (Jagannatha Hora)", "https://jagannathhora.com/?p=30277"],
             ["Chandrashtamam: what to avoid and what to do (AstroVed, Tamil)", "https://www.astroved.com/articles/chandrashtama-in-tamil"],
