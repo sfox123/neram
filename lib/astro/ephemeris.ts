@@ -94,6 +94,41 @@ export function lagnaLongitude(date: Date, latitude: number, longitude: number):
   return norm360(asc - ayanamsa(date));
 }
 
+/** Sidereal longitude of the midheaven (the 10th cusp, the point culminating in the south). */
+export function midheavenLongitude(date: Date, longitude: number): number {
+  const gst = Astronomy.SiderealTime(date); // hours
+  const ramc = norm360(gst * 15 + longitude) * DEG;
+  const T = julianCenturies(date);
+  const eps = (23.439291 - 0.0130042 * T) * DEG;
+  const mc = Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(eps)) / DEG;
+  return norm360(mc - ayanamsa(date));
+}
+
+/** Declination (kranti) in degrees of a point on the ecliptic at a sidereal longitude, north positive. */
+export function declinationOf(siderealLon: number, date: Date): number {
+  const T = julianCenturies(date);
+  const eps = (23.439291 - 0.0130042 * T) * DEG;
+  const tropical = norm360(siderealLon + ayanamsa(date)) * DEG;
+  return Math.asin(Math.sin(eps) * Math.sin(tropical)) / DEG;
+}
+
+// Heliocentric mean longitudes on the J2000 ecliptic (Meeus, Astronomical Algorithms, table 31.b),
+// used for the mean positions that Cheshta bala needs.
+const MEAN_L: Record<"Me" | "Ve" | "Ea" | "Ma" | "Ju" | "Sa", [number, number]> = {
+  Me: [252.250906, 149472.6746358],
+  Ve: [181.979801, 58517.815676],
+  Ea: [100.466457, 35999.3728565],
+  Ma: [355.433, 19140.2993039],
+  Ju: [34.351519, 3034.9056606],
+  Sa: [50.077444, 1222.1138488],
+};
+/** Sidereal mean longitude: of the Sun as seen from the Earth, or of a planet around the Sun. */
+export function meanLongitude(body: "Su" | "Me" | "Ve" | "Ma" | "Ju" | "Sa", date: Date): number {
+  const T = julianCenturies(date);
+  const [l0, rate] = MEAN_L[body === "Su" ? "Ea" : body];
+  return norm360(l0 + rate * T + (body === "Su" ? 180 : 0) - AYANAMSA_J2000);
+}
+
 export interface SunTimes {
   sunrise: Date;
   sunset: Date;

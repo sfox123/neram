@@ -16,6 +16,10 @@ export interface Profile {
   birthPlace: Place;
   here: Place; // where you are now; sets sunrise and all the time slots
   birdOverride: Bird | null;
+  /** Sarvatobhadra chakra: which school draws the vedha lines. Defaults to all three lines. */
+  sbcSchool?: "all" | "motion";
+  /** Sarvatobhadra chakra: the first sound of your name, if the guess from the spelling is wrong. */
+  nameSound?: string | null;
 }
 
 export const DEFAULT_PROFILE: Profile = {

@@ -257,6 +257,21 @@ function SetupForm() {
             crossing add or take up to 5 from the score. The full table is on the Chart page.
           </p>
           <p>
+            <strong>Sarvatobhadra chakra.</strong> Each planet throws lines across the 81-cell board from the star it is in. Malefic lines on your birth
+            star, rasi, lagna, tithi, weekday and name sound are weighed (the slow planets at half, since they sit for weeks) and compared with the middle
+            day of the twelve months around the date. Only the difference enters the score, up to 6 down or 5 up, so a standing load does not drag every
+            day. The classical one-line school is the default; the Sarvatobhadra page can switch to all three lines.
+          </p>
+          <p>
+            <strong>Shadbala.</strong> The six-fold strength of each birth planet is worked out in full on the Shadbala page. A bhukti or antaram lord
+            above its own pass mark adds up to about 1 to every score while it runs, and one below takes as much away. It sits beside the navamsa and
+            dasamsa strength; it does not replace the other weights.
+          </p>
+          <p>
+            <strong>This year and Jaimini.</strong> The annual chart (Varshaphal and Tithi Pravesha) and the Jaimini page (chara dasa, arudha padas) are
+            readings only and never change a score. Jaimini is there as a second opinion on the career and marriage stretches.
+          </p>
+          <p>
             <strong>Saram.</strong> The nostril your breath is flowing through is something only you can check, so it is not part of the score. The Saram
             page sets it beside the time verdict: left (Chandra kalai) for lasting, gentle, auspicious things; right (Surya kalai) for effort and contest;
             both (Suzhumunai) for stillness. The dawn expectation follows the Tamil weekday rule, with the Siva Swarodaya tithi rule shown alongside.
@@ -322,6 +337,13 @@ function SetupForm() {
             ["Sara sastram: directions and switching sides (Sitharkal Sankamam)", "http://sitharkalsankamam.blogspot.com/2013/07/blog-post_12.html"],
             ["Siva Swarodaya tithi and sunrise rule (Swara Yoga)", "https://www.swarayoga.org/SwaraCycle.htm"],
             ["The ten poruthams explained (Hindutone)", "https://hindutone.com/astrology/porutham-10-poruthams-south-indian-marriage-matching/"],
+            ["Varshaphal: solar return, muntha, office-bearers and mudda dasa (Dekho Panchang)", "https://dekhopanchang.com/en/learn/varshaphal"],
+            ["Tithi Pravesha: the lunar return (Dekho Panchang)", "https://dekhopanchang.com/gu/learn/tithi-pravesha"],
+            ["Sarvatobhadra chakra: construction of the board and the three schools of vedha (PanchangBodh)", "https://panchangbodh.com/sarvatobhadra-chakra-calculator"],
+            ["Shadbala: the six strengths and their parts (Varahamihira blog)", "https://varahamihira.blogspot.com/2004/07/strength-of-planets-shadbala-i.html"],
+            ["Ayana bala from declination (Saravali)", "https://saravali.github.io/astrology/bala_ayana.html"],
+            ["Jaimini: karakas, rasi drishti, arudha and chara dasa (Dekho Panchang)", "https://dekhopanchang.com/en/learn/jaimini"],
+            ["The Moon's ashtakavarga, used to correct the table (Indian Astrology Software)", "https://blog.indianastrologysoftware.com/?p=255"],
             ["Astronomy Engine, the ephemeris library", "https://github.com/cosinekitty/astronomy"],
           ].map(([text, href]) => (
             <li key={href}>

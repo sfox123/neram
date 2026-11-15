@@ -25,11 +25,13 @@ import { ashtakavarga, savGrade } from "./ashtaka";
 import { starRelation, YogiInfo, yogiInfo } from "./yogi";
 import { functionalRole, Natal, ordinal, rulesText } from "./chart";
 import { runningDasha, RunningDasha } from "./dasha";
-import { allPositions, Positions } from "./ephemeris";
+import { allPositions, Positions, siderealLongitude } from "./ephemeris";
 import { ACTIVITY, BIRDS, PakshiDay, pakshiFor, PakshiSub, PakshiYama, pakshiAt } from "./pakshi";
 import { DayFrame, GOWRI_INFO, GowriName, label, Panchang, panchangFor, Span, spanAt, within } from "./panchang";
 import { fmtTime } from "./time";
 import { chandraBala, ChandraBala, chandraNaadi, Contact, contacts, NaadiLink, Tara, taraBala, Tone } from "./transits";
+import { balaLean, balaWord, Graha, Shadbala, shadbala } from "./shadbala";
+import { DEFAULT_SCHOOL, describeHit, hitsOn, NatalPoint, natalPoints, SbcBaseline, sbcBaseline, SbcSchool, sbcScore, Thrower, throwers } from "./sbc";
 
 export type ActivityKey = "overall" | "work" | "apply" | "start" | "money" | "people" | "travel";
 
@@ -123,6 +125,10 @@ export interface DayContext {
   travel: TravelPromise | null;
   /** When the rising lagna and the Moon are in a pushkara navamsa today. */
   pushkara: DayPushkara;
+  /** Shadbala of the birth planets; null until the birth time is known. */
+  bala: Shadbala | null;
+  /** Sarvatobhadra chakra: your birth points, the day's lines from every planet but the Moon, and your year's yardstick. */
+  sbc: { school: SbcSchool; points: NatalPoint[]; others: Thrower[]; baseline: SbcBaseline };
 }
 
 export function dayContext(natal: Natal, frame: DayFrame): DayContext {
@@ -148,7 +154,42 @@ export function dayContext(natal: Natal, frame: DayFrame): DayContext {
     indu: useLagna ? induReading(natal) : null,
     travel: useLagna ? travelPromise(natal) : null,
     pushkara: dayPushkara(frame),
+    bala: useLagna ? shadbala(natal) : null,
+    sbc: sbcDay(natal, positions, mid),
   };
+}
+
+function sbcDay(natal: Natal, positions: Positions, mid: Date): DayContext["sbc"] {
+  const school = natal.profile.sbcSchool ?? DEFAULT_SCHOOL;
+  return {
+    school,
+    points: natalPoints(natal),
+    // The Moon is added minute by minute in readAt; its tithi argument is not used for the others.
+    others: throwers(positions, mid, 0, school, ["Su", "Ma", "Me", "Ju", "Ve", "Sa", "Ra", "Ke"]),
+    baseline: sbcBaseline(natal, mid, school),
+  };
+}
+
+// Sarvatobhadra chakra: malefic and benefic lines falling on your birth points, measured against your own year.
+function sbcFactors(ctx: DayContext, t: Date, tithi: number): Factor[] {
+  const moon = throwers({ ...ctx.positions, Mo: siderealLongitude("Mo", t) }, t, tithi, ctx.sbc.school, ["Mo"]);
+  const score = sbcScore(hitsOn(ctx.sbc.points, [...ctx.sbc.others, ...moon]));
+  const v = Math.max(-6, Math.min(5, score.value - ctx.sbc.baseline.median));
+  if (Math.abs(v) < 1) return [];
+  const list = (hits: typeof score.bad) => [...new Set(hits.map(describeHit))].join(", ");
+  return [
+    {
+      id: "sbc",
+      source: "Sarvatobhadra chakra",
+      title: v < 0 ? `More of your birth points are pierced than usual (${new Set(score.bad.map((h) => h.point.key)).size} of ${ctx.sbc.points.length})` : "Fewer of your birth points are pierced than usual",
+      detail:
+        v < 0
+          ? `Malefic lines on the board: ${list(score.bad) || "none"}${score.good.length ? `. Benefic lines: ${list(score.good)}` : ""}. That is heavier than your middle day this year, so go more carefully.`
+          : `${score.bad.length ? `Malefic lines: ${list(score.bad)}` : "No malefic line touches your birth points"}${score.good.length ? `. Benefic lines: ${list(score.good)}` : ""}. That is lighter than your middle day this year.`,
+      tone: v < 0 ? "bad" : "good",
+      effect: eff(v, { start: v * 1.2, work: v * 0.7 }),
+    },
+  ];
 }
 
 // ---- Individual factor builders -----------------------------------------------------------
@@ -742,6 +783,15 @@ function chartFactors(ctx: DayContext, naadi: NaadiLink[]): Factor[] {
         if (lord === ctx.indu.lord) { e.money += 1; notes.push(`${PLANET_INFO[lord].en} is lord of your Indu lagna`); }
         else if (w >= 2) notes.push(`${PLANET_INFO[lord].en} sits well from your Indu lagna`);
       }
+      // Shadbala: a period lord above its pass mark has the strength to deliver; one below it struggles to.
+      if (ctx.bala) {
+        const lean = balaLean(ctx.bala, lord);
+        if (lean !== 0) {
+          for (const k of KEYS) e[k] += lean * 0.6;
+          const b = ctx.bala.planets[lord as Graha];
+          if (Math.abs(lean) >= 0.4) notes.push(`${PLANET_INFO[lord].en} has ${b.rupas.toFixed(1)} rupas of Shadbala against the ${b.required} it needs (${balaWord(b.ratio).toLowerCase()})`);
+        }
+      }
       // Amsa strength: navamsa backs the period as a whole, dasamsa backs its work.
       const am = ctx.amsa?.[lord];
       if (am) {
@@ -805,6 +855,7 @@ export function readAt(ctx: DayContext, t: Date): Reading {
     ...savFactor(ctx, moonSign),
     ...yogiFactors(ctx, star, hora),
     ...chartFactors(ctx, naadi),
+    ...sbcFactors(ctx, t, tithi.value),
   ];
 
   // Every moment starts at 49. It was 50 before the pushkara factors were added: they only ever add,
