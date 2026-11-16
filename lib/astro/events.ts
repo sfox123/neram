@@ -8,9 +8,9 @@ import { NAKSHATRA, nakOf, PLANET_INFO, PlanetId, RASI, signOf } from "./constan
 import { subPeriods, runningDasha, DashaPeriod } from "./dasha";
 import { allPositions, dailyMotion, siderealLongitude } from "./ephemeris";
 import { marriageBaseline, marriagePromise, marriageWindows } from "./marriage";
-import { nextVanija, pakshaOf } from "./panchang";
+import { dayFrame, DayFrame, nextVanija, pakshaOf, panchangFor, Place } from "./panchang";
 import { bestWindows, Segment, TIER } from "./score";
-import { fmtDateLong, fmtDuration, fmtTime, MS_DAY, MS_HOUR } from "./time";
+import { addDaysKey, fmtDateLong, fmtDuration, fmtTime, MS_DAY, MS_HOUR } from "./time";
 import { chandraBala, contacts, taraBala, Tone, upcomingIngresses } from "./transits";
 import { travelBaseline, travelPromise, travelWindows } from "./travel";
 import { completedYears, solarReturn } from "./varsha";
@@ -62,12 +62,18 @@ export interface CoreInput {
   natal: Natal;
   now: Date;
   tz: string;
+  /** The sunrise-based day that holds now, and the place it is read for. */
+  frame: DayFrame;
+  place: Place;
   today: Segment[] | null;
   tomorrow: Segment[] | null;
 }
 
+/** Standing temple days: weekday 0 is Sunday. */
+const TEMPLE_DAYS = [{ weekday: 3, title: "Anjaneyar temple", tamil: "ஆஞ்சநேயர் கோவில்", note: "Your Wednesday visit." }];
+
 /** The cheap, day-to-day events. Safe to compute on every page. */
-export function coreEvents({ natal, now, tz, today, tomorrow }: CoreInput): NeramEvent[] {
+export function coreEvents({ natal, now, tz, frame, place, today, tomorrow }: CoreInput): NeramEvent[] {
   const out: NeramEvent[] = [];
   const horizon = now.getTime() + HORIZON_MS;
 
@@ -188,10 +194,10 @@ export function coreEvents({ natal, now, tz, today, tomorrow }: CoreInput): Nera
     }
   }
 
-  // The temple karanam.
+  // The temple karanam: always the next one, even when it is a few days off.
   {
     const v = nextVanija(now);
-    if (v.start.getTime() <= horizon) {
+    {
       const running = now >= v.start && now < v.end;
       out.push({
         id: `vanija-${v.start.getTime()}`,
@@ -205,6 +211,26 @@ export function coreEvents({ natal, now, tz, today, tomorrow }: CoreInput): Nera
         href: "/",
       });
     }
+  }
+
+  // Standing temple days, with that day's Rahu kalam so the visit can be planned around it.
+  for (const d of TEMPLE_DAYS) {
+    let ahead = (d.weekday - frame.weekday + 7) % 7;
+    if (ahead === 0 && now >= frame.sunset) ahead = 7;
+    const f = ahead === 0 ? frame : dayFrame(addDaysKey(frame.dateKey, ahead), place);
+    const p = panchangFor(f);
+    const running = now >= f.sunrise && now < f.sunset;
+    out.push({
+      id: `temple-${d.weekday}-${f.dateKey}`,
+      kind: "temple",
+      at: f.sunrise,
+      until: f.sunset,
+      tone: "good",
+      title: running ? `${d.title} today` : d.title,
+      tamil: d.tamil,
+      detail: `${d.note} Rahu kalam ${fmtTime(p.rahu.start, tz)} to ${fmtTime(p.rahu.end, tz)}, Yamagandam ${fmtTime(p.yamagandam.start, tz)} to ${fmtTime(p.yamagandam.end, tz)}; keep clear of both.`,
+      href: "/day",
+    });
   }
 
   // The best windows still ahead today, and the best of tomorrow.

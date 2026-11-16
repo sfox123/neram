@@ -52,8 +52,8 @@ export function Notifications() {
   const hourStamp = Math.floor(now.getTime() / MS_HOUR);
   const dayStamp = Math.floor(now.getTime() / MS_DAY);
   const core = useMemo(
-    () => (ready && today ? coreEvents({ natal, now: new Date(hourStamp * MS_HOUR), tz, today: today.segments, tomorrow: tomorrow?.segments ?? null }) : []),
-    [ready, natal, today, tomorrow, hourStamp, tz],
+    () => (ready && today ? coreEvents({ natal, now: new Date(hourStamp * MS_HOUR), tz, frame: today.frame, place: profile.here, today: today.segments, tomorrow: tomorrow?.segments ?? null }) : []),
+    [ready, natal, today, tomorrow, hourStamp, tz, profile.here],
   );
   const life = useMemo(() => (opened ? lifeEvents(natal, new Date(dayStamp * MS_DAY), tz) : []), [opened, natal, dayStamp, tz]);
 
@@ -173,7 +173,7 @@ export function Notifications() {
               {!opened && <p className="mt-6 text-sm text-mute">Reading the longer windows…</p>}
               {groups.length === 0 && <p className="mt-6 text-[0.95rem] text-mute">A quiet stretch. Nothing is changing in the sky or your dasa for the next two days.</p>}
               <p className="mt-8 text-[0.8rem] text-mute">
-                Planets changing sign or direction, your dasa, bhukti and antaram changes, the Moon&rsquo;s sign and star for you, the Vanisai karanam, the best windows today and tomorrow, and career, travel and marriage windows within two months.
+                Planets changing sign or direction, your dasa, bhukti and antaram changes, the Moon&rsquo;s sign and star for you, the Vanisai karanam, your Wednesday temple day, the best windows today and tomorrow, and career, travel and marriage windows within two months.
               </p>
             </div>
           </aside>
