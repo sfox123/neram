@@ -42,10 +42,10 @@ export function GrahaShape({ id, animate = true }: { id: PlanetId; animate?: boo
     case "Mo":
       return (
         <g>
-          <path d="M19 3.5a12.5 12.5 0 1 0 0 25a10 10 0 1 1 0-25z" fill={c} />
-          <circle cx={10.5} cy={12} r={1.7} fill={LO} />
-          <circle cx={13.5} cy={20.5} r={1.2} fill={LO} />
-          <circle cx={8.5} cy={17} r={0.9} fill={LO} />
+          <path d="M22 6A12 12 0 1 0 22 26A11 11 0 0 1 22 6Z" fill={c} />
+          <circle cx={10} cy={12} r={1.7} fill={LO} />
+          <circle cx={12} cy={20.5} r={1.2} fill={LO} />
+          <circle cx={7.5} cy={16.5} r={0.9} fill={LO} />
         </g>
       );
     case "Ma":

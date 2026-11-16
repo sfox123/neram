@@ -155,3 +155,18 @@
 @media (prefers-reduced-motion: reduce) {
   .wheel-slow, .wheel-slow-rev, .sun-rays, .graha-pop, .moon-glow, .verdict-in, .verdict-graha, .meter-fill { animation: none; }
 }
+
+/* ---- The bell and its drawer ------------------------------------------------------------ */
+@keyframes ring {
+  0%, 60%, 100% { transform: rotate(0); }
+  10% { transform: rotate(12deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(7deg); }
+  40% { transform: rotate(-5deg); }
+}
+@keyframes slide-in { from { transform: translateX(100%); } to { transform: none; } }
+.bell-ring { transform-origin: 50% 15%; animation: ring 2.6s ease-in-out 1s infinite; }
+.drawer-in { animation: slide-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .bell-ring, .drawer-in { animation: none; }
+}

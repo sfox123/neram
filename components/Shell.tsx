@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Graha } from "./Graha";
+import { Notifications } from "./Notifications";
 import { useStore } from "./store";
 
 const NAV = [
@@ -37,7 +38,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-[1320px] flex-col lg:flex-row">
       <header className="shrink-0 border-line lg:sticky lg:top-0 lg:h-dvh lg:w-64 lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:py-8 lg:pl-8 lg:pr-6">
-        <div className="flex items-baseline justify-between px-5 pt-5 lg:block lg:px-0 lg:pt-0">
+        <div className="flex items-center justify-between px-5 pt-5 lg:block lg:px-0 lg:pt-0">
           <Link href="/" className="block">
             <span className="flex items-center gap-2">
               <Graha id="Su" size={26} title="Neram" />
@@ -45,7 +46,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </span>
             <span className="mt-1 hidden text-sm text-mute lg:block">Neram, {profile.name}&rsquo;s almanac</span>
           </Link>
-          <span className="text-sm text-mute lg:hidden">{profile.name}&rsquo;s almanac</span>
+          <div className="flex items-center gap-2 lg:mt-3">
+            <span className="text-sm text-mute lg:hidden">{profile.name}&rsquo;s almanac</span>
+            <Notifications />
+            <span className="hidden text-sm text-mute lg:inline">Coming up</span>
+          </div>
         </div>
         <nav aria-label="Sections" className="mt-4 lg:mt-10">
           <ul className="flex gap-1 overflow-x-auto px-3 pb-2 lg:block lg:space-y-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
