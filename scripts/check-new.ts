@@ -72,3 +72,17 @@ for (const yr of [2027, 2028, 2029, 2030, 2031]) for (const topic of ["career", 
   const s = charaSupport(n, j, new Date(Date.UTC(yr, 6, 1)), topic)!;
   console.log(`  mid-${yr} ${topic}: ${RASI[s.dasa.sign].ta}/${RASI[s.sub.sign].ta} ${s.level} ${s.score} :: ${s.reasons.join("; ")}`);
 }
+
+// ---- Vakram ---------------------------------------------------------------------------------
+import { recentlyDirect, retroSpell, retroSpells, RETRO_PLANETS } from "../lib/astro/retro";
+
+console.log("\nVakram at", when(now));
+for (const s of retroSpells(now)) console.log(`  ${s.planet} ${s.running ? "retro " : "next  "} ${when(s.start)} -> ${when(s.end)}  ${((s.end.getTime() - s.start.getTime()) / 864e5).toFixed(1)}d  ${RASI[s.startSign].ta}${s.endSign !== s.startSign ? " > " + RASI[s.endSign].ta : ""}`);
+console.log("  recently direct:", recentlyDirect(now).map((s) => `${s.planet} ${when(s.end)}`).join(", ") || "none");
+// Published stations, as IST dates: the spell running on 15 Jan 2026, or the next one.
+const want: Record<string, string> = { Me: "2026-02-26", Ve: "2026-10-03", Ma: "2027-01-10", Ju: "2025-11-11", Sa: "2026-07-27" };
+for (const p of RETRO_PLANETS) {
+  const got = fmtDateLong(retroSpell(p, new Date("2026-01-15T00:00:00Z"))!.start, tz);
+  const ok = got === fmtDateLong(new Date(want[p] + "T12:00:00Z"), tz);
+  console.log(`  spell from 15 Jan 2026 begins: ${p} ${got} ${ok ? "ok" : "MISMATCH, want " + want[p]}`);
+}

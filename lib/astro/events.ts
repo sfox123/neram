@@ -6,9 +6,10 @@ import { Natal, ordinal } from "./chart";
 import { careerBaseline, careerPromise, careerWindows, LEAN_LABEL } from "./career";
 import { NAKSHATRA, nakOf, PLANET_INFO, PlanetId, RASI, signOf } from "./constants";
 import { subPeriods, runningDasha, DashaPeriod } from "./dasha";
-import { allPositions, dailyMotion, siderealLongitude } from "./ephemeris";
+import { allPositions, siderealLongitude } from "./ephemeris";
 import { marriageBaseline, marriagePromise, marriageWindows } from "./marriage";
 import { dayFrame, DayFrame, nextVanija, pakshaOf, panchangFor, Place } from "./panchang";
+import { fmtDays, isRetro, nextStation, RETRO_PLANETS, retroSpell } from "./retro";
 import { bestWindows, Segment, TIER } from "./score";
 import { addDaysKey, fmtDateLong, fmtDuration, fmtTime, MS_DAY, MS_HOUR } from "./time";
 import { chandraBala, contacts, taraBala, Tone, upcomingIngresses } from "./transits";
@@ -34,6 +35,9 @@ export interface NeramEvent {
 
 /** How far ahead the bell looks for day-to-day events: today, tomorrow and the day after. */
 export const HORIZON_MS = 2.5 * MS_DAY;
+
+/** Stations (vakram, vakra nivarthi) are flagged a week ahead; the bell counts them once they are inside HORIZON_MS. */
+const STATION_HORIZON_MS = 7 * MS_DAY;
 
 const DASA_HORIZON = { antaram: 14 * MS_DAY, bhukti: 90 * MS_DAY, maha: 365 * MS_DAY };
 const LIFE_HORIZON = 60 * MS_DAY;
@@ -95,24 +99,29 @@ export function coreEvents({ natal, now, tz, frame, place, today, tomorrow }: Co
     });
   }
 
-  // Planets turning retrograde or direct.
-  for (const p of ["Ma", "Me", "Ju", "Ve", "Sa"] as PlanetId[]) {
-    const dir = (t: Date) => (dailyMotion(p, t) < 0 ? 1 : 0);
-    const flip = nextChange(dir, now, HORIZON_MS, 6 * MS_HOUR);
+  // Vakram and vakra nivarthi: planets turning retrograde or direct, a week ahead, with how long the spell lasts.
+  for (const p of RETRO_PLANETS) {
+    const flip = nextStation(p, now, STATION_HORIZON_MS, 1, 6 * MS_HOUR);
     if (!flip) continue;
-    const retro = dir(new Date(flip.getTime() + MS_HOUR)) === 1;
+    const retro = isRetro(p, new Date(flip.getTime() + MS_HOUR));
+    // The spell this station opens (vakram) or closes (vakra nivarthi).
+    const s = retroSpell(p, new Date(flip.getTime() + (retro ? MS_HOUR : -MS_HOUR)));
+    const rules = PLANET_INFO[p].karaka.split(",").slice(0, 2).join(",");
+    const len = s ? fmtDays(s.end.getTime() - s.start.getTime()) : "";
+    const sign = s ? (retro ? s.startSign : s.endSign) : signOf(siderealLongitude(p, flip));
+    const place = `${RASI[sign].ta}, ${ordinal(((sign - natal.moonSign + 12) % 12) + 1)} from your rasi`;
     out.push({
       id: `station-${p}-${flip.getTime()}`,
       kind: "planet",
       at: flip,
       tone: retro ? "neutral" : "good",
       planet: p,
-      title: `${PLANET_INFO[p].ta} turns ${retro ? "retrograde" : "direct"}`,
-      tamil: `${PLANET_INFO[p].tamil} ${retro ? "வக்ரம்" : "நேர்க்கதி"}`,
+      title: `${PLANET_INFO[p].ta} ${retro ? "turns retrograde (vakram)" : "turns direct (vakra nivarthi)"}`,
+      tamil: `${PLANET_INFO[p].tamil} ${retro ? "வக்ரம்" : "வக்ர நிவர்த்தி"}`,
       detail: retro
-        ? `What it rules (${PLANET_INFO[p].karaka.split(",").slice(0, 2).join(",")}) slows and comes back for review.`
-        : `What it rules (${PLANET_INFO[p].karaka.split(",").slice(0, 2).join(",")}) moves forward again.`,
-      href: "/sky",
+        ? `${s ? `Retrograde until ${fmtDateLong(s.end, tz)}, ${len}, ` : ""}in ${place}. What it rules (${rules}) slows and comes back for review.`
+        : `${s ? `Ends ${len} of retrograde that began ${fmtDateLong(s.start, tz)}, ` : ""}in ${place}. What it rules (${rules}) moves forward again.`,
+      href: "/sky#vakram",
     });
   }
 

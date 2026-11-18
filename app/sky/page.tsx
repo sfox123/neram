@@ -8,8 +8,9 @@ import { ashtakavarga, savGrade } from "@/lib/astro/ashtaka";
 import { houseTopic, ordinal, rulesText } from "@/lib/astro/chart";
 import { formatDeg, nakOf, NAKSHATRA, padaOf, PLANET_INFO, PLANETS, RASI, signOf } from "@/lib/astro/constants";
 import { allPositions } from "@/lib/astro/ephemeris";
+import { fmtAhead, fmtDays, recentlyDirect, retroSpells } from "@/lib/astro/retro";
 import { chandraNaadi, contacts, gochara, saturnPhase, taraBala, upcomingIngresses } from "@/lib/astro/transits";
-import { fmtDateLong, fmtTime, MS_DAY } from "@/lib/astro/time";
+import { fmtCountdown, fmtDateLong, fmtTime, MS_DAY } from "@/lib/astro/time";
 
 export default function SkyPage() {
   const { ready, now, natal, profile } = useStore();
@@ -28,6 +29,8 @@ export default function SkyPage() {
       saturn: saturnPhase(natal, pos),
       ingresses: upcomingIngresses(natal, t, 240),
       tara: taraBala(natal.star, nakOf(pos.Mo)),
+      retro: retroSpells(t),
+      direct: recentlyDirect(t),
     };
   }, [bucket, natal]);
 
@@ -190,6 +193,101 @@ export default function SkyPage() {
           planet&rsquo;s own Ashtakavarga score in the sign it is crossing (Rahu is read through Sani, Ketu through Sevvai). A planet outside its helping
           places but with five or more points still works for you, through the lagna house shown beside it. Only your period lords carry these marks
           into the scores.
+        </p>
+      </section>
+
+      <section id="vakram" className="mt-12 scroll-mt-24">
+        <H2 aside={data.retro.some((r) => r.running) ? `${data.retro.filter((r) => r.running).length} retrograde now` : "none retrograde now"}>
+          Vakram: retrograde now and ahead <span className="tamil ml-2 text-lg font-medium text-peacock">வக்ரம், வக்ர நிவர்த்தி</span>
+        </H2>
+        <p className="mb-3 max-w-[70ch] text-[0.95rem] text-mute">
+          Each planet&rsquo;s running retrograde spell, or the next one. Vakram is the day it stands still and turns back; vakra nivarthi is the day it
+          stands still again and moves forward. The Sun and Moon never turn back and Rahu and Ketu always move backward, so they are not listed.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[52rem] border-collapse text-[0.95rem]">
+            <thead>
+              <tr className="border-y border-line text-left text-sm text-mute">
+                <th className="py-2 pr-3 font-normal">Planet</th>
+                <th className="py-2 pr-3 font-normal">Now</th>
+                <th className="py-2 pr-3 font-normal">Vakram (turns back)</th>
+                <th className="py-2 pr-3 font-normal">Vakra nivarthi (turns direct)</th>
+                <th className="py-2 pr-3 font-normal">Lasts</th>
+                <th className="py-2 pr-3 font-normal">In</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.retro.map((r) => {
+                const left = r.end.getTime() - now.getTime();
+                const ahead = r.start.getTime() - now.getTime();
+                const fromMoon = (s: number) => ordinal(((s - natal.moonSign + 12) % 12) + 1);
+                const when = (d: Date) => (
+                  <>
+                    {fmtDateLong(d, tz)}
+                    <span className="block text-sm text-mute">{fmtTime(d, tz)}</span>
+                  </>
+                );
+                return (
+                  <tr key={r.planet} className="border-b border-line align-top">
+                    <th scope="row" className="py-2 pr-3 text-left font-semibold">
+                      {PLANET_INFO[r.planet].ta}
+                      <span className="tamil ml-2 font-normal text-peacock">{PLANET_INFO[r.planet].tamil}</span>
+                    </th>
+                    <td className="py-2 pr-3">
+                      {r.running ? (
+                        <span className="inline-flex items-baseline gap-2">
+                          <ToneDot tone="neutral" />
+                          <span>
+                            <strong>Retrograde</strong>
+                            <span className="block text-sm text-mute">direct in {left < 3 * MS_DAY ? fmtCountdown(left) : fmtDays(left)}</span>
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-baseline gap-2">
+                          <ToneDot tone="good" />
+                          <span>
+                            Direct
+                            <span className="block text-sm text-mute">vakram in {ahead < 3 * MS_DAY ? fmtCountdown(ahead) : fmtAhead(ahead)}</span>
+                          </span>
+                        </span>
+                      )}
+                    </td>
+                    <td className={`py-2 pr-3 tabular-nums ${r.running ? "text-mute" : ""}`}>{when(r.start)}</td>
+                    <td className="py-2 pr-3 tabular-nums">{when(r.end)}</td>
+                    <td className="py-2 pr-3 tabular-nums">
+                      {fmtDays(r.end.getTime() - r.start.getTime())}
+                      {r.running && (
+                        <span className="mt-1.5 block h-1 w-20 overflow-hidden rounded-full bg-line" aria-hidden>
+                          <span className="block h-full bg-peacock" style={{ width: `${Math.min(100, ((now.getTime() - r.start.getTime()) / (r.end.getTime() - r.start.getTime())) * 100)}%` }} />
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-3">
+                      {RASI[r.startSign].ta}
+                      {r.endSign !== r.startSign && <> back into {RASI[r.endSign].ta}</>}
+                      <span className="block text-sm text-mute">
+                        {fromMoon(r.startSign)}
+                        {r.endSign !== r.startSign && ` then ${fromMoon(r.endSign)}`} from your rasi
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {data.direct.length > 0 && (
+          <p className="mt-3 max-w-[72ch] text-[0.95rem]">
+            <strong>Recently direct.</strong>{" "}
+            {data.direct
+              .map((d) => `${PLANET_INFO[d.planet].ta} on ${fmtDateLong(d.end, tz)}, after ${fmtDays(d.end.getTime() - d.start.getTime())} in ${RASI[d.endSign].ta}`)
+              .join("; ")}
+            . The first days after vakra nivarthi are still slow while it regains speed.
+          </p>
+        )}
+        <p className="mt-3 max-w-[72ch] text-sm text-mute">
+          While a planet is retrograde, what it rules slows down and comes back for a second look: plans are revised rather than launched. Vakram and
+          vakra nivarthi days also appear in the bell a week ahead.
         </p>
       </section>
 
