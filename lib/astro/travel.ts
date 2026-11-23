@@ -14,13 +14,15 @@
 
 import { atmakaraka } from "./vargas";
 import { houseTopic, Natal, ordinal } from "./chart";
-import { BAD_YOGAS, houseFrom, NAKSHATRA, PLANET_INFO, PlanetId, PLANETS, RASI, signOf, WEEKDAYS } from "./constants";
+import { BAD_YOGAS, DASHA_ORDER, houseFrom, nakOf, NAKSHATRA, PLANET_INFO, PlanetId, PLANETS, RASI, signOf, WEEKDAYS } from "./constants";
 import { RunningDasha, runningDasha } from "./dasha";
 import { aspects } from "./dignity";
 import { siderealLongitude } from "./ephemeris";
 import { DayFrame, dayFrame, panchangFor, Place, spanAt } from "./panchang";
 import { addDaysKey, MS_DAY } from "./time";
 import { chandraBala, taraBala } from "./transits";
+import { Varshaphal, varshaphal } from "./varsha";
+import { charaAt, jaimini } from "./jaimini";
 
 export type Purpose = "work" | "leisure" | "stay";
 export type Tone3 = "good" | "bad" | "neutral";
@@ -51,8 +53,20 @@ export interface TravelPromise {
 }
 
 const MOVABLE = [0, 3, 6, 9];
+const FIXED = [1, 4, 7, 10];
 const WATERY = [3, 7, 11];
+/** Kaatru rasi. Classical texts read water signs as sea voyages; air signs as journeys by air is a modern reading. */
+const AIRY = [2, 6, 10];
 const NAME = (p: PlanetId) => PLANET_INFO[p].ta;
+/** The lord of the star a longitude falls in: a planet gives the results of its star lord. */
+export const starLordOf = (lon: number): PlanetId => DASHA_ORDER[nakOf(lon) % 9];
+
+/** Sara (movable), sthira (fixed) or ubhaya (dual), and the element where it bears on travel. */
+export function signNature(sign: number): string {
+  const kind = MOVABLE.includes(sign) ? "movable (sara)" : FIXED.includes(sign) ? "fixed (sthira)" : "dual (ubhaya)";
+  const el = WATERY.includes(sign) ? ", a water sign (neer rasi)" : AIRY.includes(sign) ? ", an air sign (kaatru rasi)" : "";
+  return `${kind}${el}`;
+}
 const KENDRA = [1, 4, 7, 10];
 const TRINE = [5, 9];
 
@@ -65,9 +79,11 @@ export function travelPromise(n: Natal): TravelPromise {
   const purpose: Record<Purpose, number> = { work: 0, leisure: 0, stay: 0 };
   const planets = {} as Record<PlanetId, TravelPlanet>;
   for (const p of PLANETS) planets[p] = { planet: p, weight: 0, reasons: [], purposes: [] };
+  // Reasons are kept with their weight so each planet's strongest tie is listed first.
+  const why = new Map<PlanetId, { w: number; r: string }[]>(PLANETS.map((p) => [p, []]));
   const mark = (p: PlanetId, w: number, reason: string, ...pu: Purpose[]) => {
     planets[p].weight += w;
-    planets[p].reasons.push(reason);
+    why.get(p)!.push({ w, r: reason });
     for (const x of pu) if (!planets[p].purposes.includes(x)) planets[p].purposes.push(x);
   };
   const add = (w: number, title: string, detail: string, pu: Partial<Record<Purpose, number>> = {}) => {
@@ -201,6 +217,44 @@ export function travelPromise(n: Natal): TravelPromise {
   const ak = atmakaraka(n).planet;
   if ([9, 12].includes(h(ak))) add(1, `Atmakaraka ${NAME(ak)} in your ${ordinal(h(ak))}`, "The significator of the self sits in a house of distant places.", { stay: 8 });
 
+  // 11. Star lords. A planet gives the results of the lord of the star it sits in, so a planet in
+  // one of Rahu's stars (Thiruvathirai, Swathi, Sathayam) carries Rahu's foreign results in its
+  // own periods, and one in a star of the 12th or 9th lord carries theirs.
+  const starOf = (p: PlanetId) => NAKSHATRA[nakOf(pos[p])].ta;
+  const rahuStar = PLANETS.filter((p) => p !== "Ra" && p !== "Ke" && starLordOf(pos[p]) === "Ra");
+  for (const p of PLANETS) {
+    if (p === "Ra" || p === "Ke") continue;
+    const sl = starLordOf(pos[p]);
+    if (sl === "Ra") mark(p, 1.5, `sits in ${starOf(p)}, a star of Rahu, so its periods carry Rahu's foreign results`, ...planets.Ra.purposes);
+    else if (sl === L12 && p !== L12) mark(p, 1, `sits in ${starOf(p)}, a star of the 12th lord ${NAME(L12)}`, "stay");
+    else if (sl === L9 && p !== L9) mark(p, 1, `sits in ${starOf(p)}, a star of the 9th lord ${NAME(L9)}`, "leisure");
+  }
+  if (rahuStar.length) {
+    const work = rahuStar.some((p) => n.rules[p].includes(10) || n.rules[p].includes(7));
+    add(
+      Math.min(1.5, 0.75 * rahuStar.length),
+      `${rahuStar.map((p) => `${NAME(p)} in ${starOf(p)}`).join(", ")}: Rahu's star${rahuStar.length > 1 ? "s" : ""}`,
+      `A planet gives the results of the lord of its star. ${rahuStar.map(NAME).join(" and ")} sit${rahuStar.length === 1 ? "s" : ""} in a star ruled by Rahu, the significator of the foreign, so ${rahuStar.length === 1 ? "its" : "their"} periods bring foreign contact even though ${rahuStar.length === 1 ? "it does" : "they do"} not rule a house of travel.${work ? ` ${rahuStar.filter((p) => n.rules[p].includes(10) || n.rules[p].includes(7)).map((p) => `${NAME(p)} rules your ${n.rules[p].filter((x) => x === 10 || x === 7).map(ordinal).join(" and ")}`).join("; ")}, so the contact comes through work.` : ""}`,
+      work ? { work: 14 } : { leisure: 8, stay: 6 },
+    );
+  }
+
+  // 12. Water and air signs. The tradition reads the water signs (neer rasi) as crossing the sea;
+  // modern readers add the air signs (kaatru rasi) for journeys by air.
+  const keyPlanets: [PlanetId, string][] = [];
+  for (const [p, label] of [["Ra", "Rahu"], [L12, "12th lord"], [L9, "9th lord"], ["Mo", "the Moon"], [L10, "10th lord"]] as [PlanetId, string][])
+    if (!keyPlanets.some(([q]) => q === p)) keyPlanets.push([p, label]);
+  const wet = keyPlanets.filter(([p]) => WATERY.includes(s(p)));
+  const airy = keyPlanets.filter(([p]) => AIRY.includes(s(p)));
+  const say = (xs: [PlanetId, string][]) => xs.map(([p, l]) => `${l === "Rahu" || l === "the Moon" ? NAME(p) : `${l} ${NAME(p)}`} in ${RASI[s(p)].ta}`).join(", ");
+  if (wet.length + airy.length >= 2)
+    add(
+      wet.length + airy.length >= 3 ? 1 : 0.5,
+      "Water and air signs",
+      `${[wet.length ? `In water signs (neer rasi), the classical mark of crossing the sea: ${say(wet)}.` : "", airy.length ? `In air signs (kaatru rasi), which modern readers take as journeys by air: ${say(airy)}.` : ""].filter(Boolean).join(" ")}`,
+      { leisure: 6, work: 4 },
+    );
+
   // Planets sitting with the 9th or 12th lord share in their periods.
   for (const p of PLANETS) {
     if (p === L12 || p === L9 || p === "Ra" || p === "Ke") continue;
@@ -208,7 +262,10 @@ export function travelPromise(n: Natal): TravelPromise {
     if (s(p) === s(L9) && planets[p].weight < 1.5) mark(p, 1, `sits with the 9th lord ${NAME(L9)}`);
   }
   if ([1, 7].includes(h("Ke")) || [3, 9, 12].includes(h("Ke"))) mark("Ke", [9, 12].includes(h("Ke")) ? 2 : 0.5, `on the Rahu axis, in your ${ordinal(h("Ke"))}`);
-  for (const p of PLANETS) planets[p].weight = Math.min(4, Math.round(planets[p].weight * 100) / 100);
+  for (const p of PLANETS) {
+    planets[p].weight = Math.min(4, Math.round(planets[p].weight * 100) / 100);
+    planets[p].reasons = why.get(p)!.sort((a, b) => b.w - a.w).map((x) => x.r);
+  }
 
   const word: PromiseWord = score >= 11 ? "Strong" : score >= 7.5 ? "Good" : score >= 4 ? "Moderate" : "Low";
   const cap = (x: number) => Math.max(8, Math.min(100, Math.round(x)));
@@ -227,20 +284,71 @@ export function travelPromise(n: Natal): TravelPromise {
 
 export type TravelLevel = "high" | "raised" | "ordinary";
 
+/** One reason a moment leans towards travel, and the planet that carries it. */
+export interface TravelFactor {
+  text: string;
+  w: number;
+  planet: PlanetId | null;
+  /** period: the dasa; year: the annual chart; slow: Rahu, Ketu, Guru, Sani; fast: Sun and the moving lords. */
+  layer: "period" | "year" | "slow" | "fast";
+}
+
 export interface TravelMoment {
   t: Date;
   dasaPart: number;
+  /** Annual chart (Tajika): muntha, lord of the year, mudda period. */
+  yearPart: number;
   transitPart: number;
+  /** Fast transits that move within weeks: they pick the stretch inside a longer window. */
+  quickPart: number;
   total: number;
   level: TravelLevel;
   reasons: string[];
+  factors: TravelFactor[];
   purposes: Purpose[];
+  run: RunningDasha | null;
+}
+
+// Annual charts are costly to cast, and the timing samples ask for the same few dozen again and again.
+const yearCache = new WeakMap<Natal, Map<number, Varshaphal>>();
+const YEAR_DAYS = 365.2564;
+function yearAt(n: Natal, t: Date): Varshaphal | null {
+  if (t < n.birth) return null;
+  let cache = yearCache.get(n);
+  if (!cache) yearCache.set(n, (cache = new Map()));
+  const get = (k: number) => {
+    let v = cache.get(k);
+    if (!v) cache.set(k, (v = varshaphal(n, k)));
+    return v;
+  };
+  let k = Math.max(0, Math.floor((t.getTime() - n.birth.getTime()) / (YEAR_DAYS * MS_DAY)));
+  for (let guard = 0; guard < 4; guard++) {
+    const v = get(k);
+    if (t < v.start && k > 0) k--;
+    else if (t >= v.end) k++;
+    else return v;
+  }
+  return get(k);
 }
 
 /** Where the line falls between ordinary, raised and high for this chart. */
 export interface TravelBaseline {
   raised: number;
   high: number;
+  /** Every sampled total of the adult life, ascending, for ranking a single moment. */
+  sorted: number[];
+}
+
+/** Share of the adult life (0..100) that scores below `total`. */
+export function travelRank(base: TravelBaseline, total: number): number {
+  const xs = base.sorted;
+  let lo = 0, hi = xs.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (xs[mid] < total) lo = mid + 1;
+    else hi = mid;
+  }
+  return Math.round((lo / Math.max(1, xs.length)) * 100);
 }
 
 /**
@@ -254,70 +362,170 @@ export function travelBaseline(n: Natal, promise: TravelPromise): TravelBaseline
   for (let i = 0; i < 52 * 24; i++) totals.push(travelAt(n, promise, new Date(start + i * 15.2 * MS_DAY), null, undefined).total);
   totals.sort((a, b) => a - b);
   const q = (f: number) => totals[Math.min(totals.length - 1, Math.floor(totals.length * f))];
-  return { raised: q(0.6), high: q(0.84) };
+  return { raised: q(0.6), high: q(0.84), sorted: totals };
 }
 
+const TRAVEL_HOUSES = [3, 9, 12];
+const FAST: PlanetId[] = ["Su", "Me", "Ve", "Ma"];
+
 export function travelAt(n: Natal, promise: TravelPromise, t: Date, base: TravelBaseline | null, run?: RunningDasha | null): TravelMoment {
-  const reasons: string[] = [];
+  const factors: TravelFactor[] = [];
   const purposes = new Set<Purpose>();
-  let dasaPart = 0;
+  const parts = { period: 0, year: 0, slow: 0, fast: 0 };
+  const push = (layer: TravelFactor["layer"], w: number, planet: PlanetId | null, text: string) => {
+    parts[layer] += w;
+    factors.push({ layer, w, planet, text });
+  };
+  const L12 = n.lordOf(12), L9 = n.lordOf(9), L10 = n.lordOf(10);
+  const sign12 = (n.lagnaSign + 11) % 12;
+  const sign9 = (n.lagnaSign + 8) % 12;
+  const natalSign = (p: PlanetId) => signOf(n.positions[p]);
+
+  // 1. The dasa, down to sookshma. Sookshma periods last days to weeks, the scale of a real trip.
   const r = run === undefined ? runningDasha(n.mahas, t) : run;
   if (r) {
     const seen = new Set<PlanetId>();
-    for (const [level, lord, mult] of [["dasa", r.maha.lord, 0.5], ["bhukti", r.bhukti.lord, 1], ["antaram", r.antaram.lord, 1]] as [string, PlanetId, number][]) {
+    for (const [level, lord, mult] of [["dasa", r.maha.lord, 0.5], ["bhukti", r.bhukti.lord, 1], ["antaram", r.antaram.lord, 1], ["sookshma", r.sookshma.lord, 0.6]] as [string, PlanetId, number][]) {
       const tp = promise.planets[lord];
       if (tp.weight >= 1) {
-        dasaPart += tp.weight * mult;
-        if (tp.weight >= 1.5) {
-          if (!seen.has(lord)) reasons.push(`${NAME(lord)} ${level}: ${tp.reasons[0]}`);
-          else reasons.push(`${NAME(lord)} also holds the ${level}`);
-          if (level !== "dasa") for (const p of tp.purposes) purposes.add(p);
-        }
+        const w = tp.weight * mult;
+        const text = tp.weight < 1.5 ? "" : !seen.has(lord) ? `${NAME(lord)} ${level}: ${tp.reasons[0]}` : `${NAME(lord)} also holds the ${level}`;
+        if (text) push("period", w, lord, text);
+        else parts.period += w;
+        if (tp.weight >= 1.5 && level !== "dasa") for (const p of tp.purposes) purposes.add(p);
       }
       seen.add(lord);
     }
   }
 
-  let transitPart = 0;
-  const probe = new Date(t.getTime());
-  const ra = signOf(siderealLongitude("Ra", probe));
+  // 2. The annual chart (Tajika): the muntha's house, the lord of the year and the mudda period.
+  const v = yearAt(n, t);
+  if (v) {
+    const mh = v.munthaHouseBirth;
+    if (TRAVEL_HOUSES.includes(mh))
+      push("year", 0.75, RASI[v.muntha].lord, `Muntha in ${RASI[v.muntha].ta}, your ${ordinal(mh)} house: ${mh === 3 ? "a year of short journeys" : mh === 9 ? "a year of long journeys" : "a year that points abroad"}`);
+    const yl = promise.planets[v.yearLord];
+    if (yl.weight >= 2.5) push("year", 0.5, v.yearLord, `${NAME(v.yearLord)} is lord of this year's annual chart: ${yl.reasons[0]}`);
+    const md = v.mudda.find((m) => t >= m.start && t < m.end);
+    if (md && promise.planets[md.lord].weight >= 1.5) push("year", promise.planets[md.lord].weight * 0.4, md.lord, `${NAME(md.lord)} mudda period in the annual chart: ${promise.planets[md.lord].reasons[0]}`);
+  }
+
+  // 3. Slow transits: Rahu, Ketu, Guru and Sani over the 9th, 12th, lagna and the Moon.
+  const pos = {} as Record<PlanetId, number>;
+  for (const p of ["Su", "Me", "Ve", "Ma", "Ju", "Sa", "Ra"] as PlanetId[]) pos[p] = siderealLongitude(p, t);
+  if (r) for (const p of [r.bhukti.lord, r.sookshma.lord]) if (pos[p] === undefined) pos[p] = siderealLongitude(p, t);
+  const ra = signOf(pos.Ra);
   const ke = (ra + 6) % 12;
-  const ju = signOf(siderealLongitude("Ju", probe));
-  const sa = signOf(siderealLongitude("Sa", probe));
-  const sign12 = (n.lagnaSign + 11) % 12;
-  const sign9 = (n.lagnaSign + 8) % 12;
-  const L12 = n.lordOf(12), L9 = n.lordOf(9);
+  const ju = signOf(pos.Ju);
+  const sa = signOf(pos.Sa);
+  const raSign = `${RASI[ra].ta}, ${AIRY.includes(ra) ? "an air sign" : WATERY.includes(ra) ? "a water sign" : MOVABLE.includes(ra) ? "a movable sign" : "its sign"}`;
 
   const rl = houseFrom(n.lagnaSign, ra);
   const rm = houseFrom(n.moonSign, ra);
   const kl = houseFrom(n.lagnaSign, ke);
-  if (rl === 12) { transitPart += 3; reasons.push("Rahu is crossing your 12th house, the strongest transit for going abroad"); }
-  else if (rl === 9) { transitPart += 2.5; reasons.push("Rahu is crossing your 9th house of long journeys"); }
-  else if (rl === 1) { transitPart += 2.5; reasons.push("Rahu is crossing your lagna, which stirs up a wish for the foreign and can spark a departure"); }
-  else if (rl === 7) { transitPart += 1.5; reasons.push("Rahu is crossing your 7th house: foreign partners and clients"); }
-  else if (rl === 3) { transitPart += 1.5; reasons.push("Rahu is crossing your 3rd house: short trips multiply"); }
-  if (kl === 12 || kl === 9) { transitPart += 1.5; reasons.push(`Ketu is crossing your ${ordinal(kl)} house`); }
-  if (rm === 12) { transitPart += 1.5; reasons.push("Rahu is in the 12th from your Moon"); }
-  else if (rm === 1) { transitPart += 1.5; reasons.push("Rahu is passing over your Moon"); }
-  else if (rm === 9) { transitPart += 1; reasons.push("Rahu is in the 9th from your Moon"); }
+  if (rl === 12) push("slow", 3, "Ra", `Rahu is crossing your 12th house (${raSign}), the strongest transit for going abroad`);
+  else if (rl === 9) push("slow", 2.5, "Ra", `Rahu is crossing your 9th house of long journeys (${raSign})`);
+  else if (rl === 1) push("slow", 2.5, "Ra", `Rahu is crossing your lagna (${raSign}), which stirs up a wish for the foreign and can spark a departure`);
+  else if (rl === 7) push("slow", 1.5, "Ra", `Rahu is crossing your 7th house (${raSign}): foreign partners and clients`);
+  else if (rl === 3) push("slow", 1.5, "Ra", `Rahu is crossing your 3rd house (${raSign}): short trips multiply`);
+  if (kl === 12 || kl === 9) push("slow", 1.5, "Ke", `Ketu is crossing your ${ordinal(kl)} house`);
+  if (rm === 12) push("slow", 1.5, "Ra", `Rahu is in the 12th from your Moon (${raSign})`);
+  else if (rm === 1) push("slow", 1.5, "Ra", `Rahu is passing over your Moon (${raSign})`);
+  else if (rm === 9) push("slow", 1, "Ra", `Rahu is in the 9th from your Moon (${raSign})`);
   for (const [lord, label] of [[L12, "12th"], [L9, "9th"]] as [PlanetId, string][])
-    if (lord !== "Ra" && signOf(n.positions[lord]) === ra) { transitPart += 1; reasons.push(`Rahu is passing over your ${label} lord ${NAME(lord)}`); }
+    if (lord !== "Ra" && natalSign(lord) === ra) push("slow", 1, "Ra", `Rahu is passing over your ${label} lord ${NAME(lord)}`);
 
   const juHits: number[] = [];
   const saHits: number[] = [];
   for (const [sign, label] of [[sign12, "12th"], [sign9, "9th"]] as [number, string][]) {
-    if (ju === sign) { transitPart += 2; juHits.push(sign); reasons.push(`Guru is crossing your ${label} house`); }
-    else if (aspects("Ju", ju, sign)) { transitPart += 1; juHits.push(sign); reasons.push(`Guru looks at your ${label} house`); }
-    if (sa === sign) { transitPart += label === "12th" ? 1.5 : 1; saHits.push(sign); reasons.push(`Sani is crossing your ${label} house`); }
-    else if (aspects("Sa", sa, sign)) { transitPart += 0.75; saHits.push(sign); reasons.push(`Sani looks at your ${label} house`); }
+    if (ju === sign) { juHits.push(sign); push("slow", 2, "Ju", `Guru is crossing your ${label} house`); }
+    else if (aspects("Ju", ju, sign)) { juHits.push(sign); push("slow", 1, "Ju", `Guru looks at your ${label} house`); }
+    if (sa === sign) { saHits.push(sign); push("slow", label === "12th" ? 1.5 : 1, "Sa", `Sani is crossing your ${label} house`); }
+    else if (aspects("Sa", sa, sign)) { saHits.push(sign); push("slow", 0.75, "Sa", `Sani looks at your ${label} house`); }
   }
   const both = juHits.filter((x) => saHits.includes(x));
-  if (both.length) { transitPart += 1.5; reasons.push(`Guru and Sani both touch your ${both.map((x) => (x === sign12 ? "12th" : "9th")).join(" and ")} house at once (double transit)`); }
+  if (both.length) push("slow", 1.5, null, `Guru and Sani both touch your ${both.map((x) => (x === sign12 ? "12th" : "9th")).join(" and ")} house at once (double transit)`);
+  // Guru's touch on the natal 12th and 9th lords wakes them, as it wakes any planet it passes or sees.
+  for (const [lord, label] of [[L12, "12th"], [L9, "9th"]] as [PlanetId, string][]) {
+    if (lord === "Ra") continue;
+    const at = natalSign(lord);
+    if (ju === at || aspects("Ju", ju, at))
+      push("slow", 0.75, "Ju", `Guru ${ju === at ? "passes over" : "looks at"} ${lord === "Ju" ? "its own birth place" : `${NAME(lord)}`} in ${RASI[at].ta}, your ${label} lord`);
+  }
 
-  const total = dasaPart + transitPart;
-  // High needs a period and a transit together; one alone is only "raised".
-  const level: TravelLevel = !base ? "ordinary" : total >= base.high && dasaPart >= 2.5 && transitPart >= 2.5 ? "high" : total >= base.raised ? "raised" : "ordinary";
-  return { t, dasaPart: Math.round(dasaPart * 100) / 100, transitPart: Math.round(transitPart * 100) / 100, total: Math.round(total * 100) / 100, level, reasons, purposes: [...purposes] };
+  // 4. Fast transits. The Sun is the month's timer; the moving 9th and 12th lords and the running
+  // period lords show which weeks inside a longer window the trip falls in.
+  const fastPart0 = parts.fast;
+  const su = signOf(pos.Su);
+  const sh = houseFrom(n.lagnaSign, su);
+  if (sh === 9 || sh === 12) push("fast", 1, "Su", `Suriyan is crossing your ${ordinal(sh)} house this month`);
+  else {
+    const over = ([[L9, "9th lord"], [L12, "12th lord"], ["Ra", "Rahu"]] as [PlanetId, string][]).find(([p]) => p !== "Su" && natalSign(p) === su);
+    if (over) push("fast", 0.75, "Su", `Suriyan is passing over your ${over[1] === "Rahu" ? "natal Rahu" : `${over[1]} ${NAME(over[0])}`} this month`);
+  }
+  for (const [lord, label] of [[L9, "9th"], [L12, "12th"]] as [PlanetId, string][]) {
+    if (!FAST.includes(lord) || lord === "Su") continue;
+    const ls = signOf(pos[lord]);
+    const lh = houseFrom(n.lagnaSign, ls);
+    if ([1, 3, 9, 10, 12].includes(lh)) push("fast", 0.75, lord, `Your ${label} lord ${NAME(lord)} is moving through your ${ordinal(lh)} house${lh === 10 ? ": journeys on account of work" : lh === 1 ? ": the journey comes to you" : ""}`);
+    else if (ls === natalSign("Ra") || ls === natalSign(L10)) push("fast", 0.75, lord, `Your ${label} lord ${NAME(lord)} is passing over your ${ls === natalSign("Ra") ? "natal Rahu" : `10th lord ${NAME(L10)}`}`);
+  }
+  if (r) {
+    let pl = 0;
+    for (const [level, lord] of [["bhukti", r.bhukti.lord], ["sookshma", r.sookshma.lord]] as [string, PlanetId][]) {
+      if (lord === "Ra" || lord === "Ke" || promise.planets[lord].weight < 1.5 || pl >= 1) continue;
+      const ls = signOf(pos[lord]);
+      const lh = houseFrom(n.lagnaSign, ls);
+      if (MOVABLE.includes(ls) || TRAVEL_HOUSES.includes(lh)) {
+        pl += 0.5;
+        push("fast", 0.5, lord, `${NAME(lord)}, lord of the ${level}, is moving through ${RASI[ls].ta}, ${TRAVEL_HOUSES.includes(lh) ? `your ${ordinal(lh)} house` : "a movable sign"}${AIRY.includes(ls) ? " and an air sign" : WATERY.includes(ls) ? " and a water sign" : ""}`);
+      }
+    }
+  }
+  // The fast layer only sharpens; it cannot outweigh the slow ones.
+  if (parts.fast - fastPart0 > 2.5) parts.fast = fastPart0 + 2.5;
+
+  const total = parts.period + parts.year + parts.slow + parts.fast;
+  // High needs a period and a transit together, and the fast planets to agree on the month: the slow
+  // layers open a window that can last a year, the fast ones mark the weeks a trip actually happens in.
+  // (Checked against a quiet decade with no trips: without the fast condition, twice as many of its
+  // weeks read high.) Anything short of all three is only "raised".
+  const level: TravelLevel =
+    !base ? "ordinary"
+    : total >= base.high && parts.period + parts.year >= 2.5 && parts.slow + parts.fast >= 2.5 && parts.fast >= 1.5 ? "high"
+    : total >= base.raised ? "raised"
+    : "ordinary";
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  return {
+    t,
+    dasaPart: r2(parts.period),
+    yearPart: r2(parts.year),
+    transitPart: r2(parts.slow),
+    quickPart: r2(parts.fast),
+    total: r2(total),
+    level,
+    reasons: factors.map((f) => f.text),
+    factors,
+    purposes: [...purposes],
+    run: r,
+  };
+}
+
+/** The planets carrying a set of moments, ranked by how much of the score each one supplied. */
+export function travelDrivers(moments: TravelMoment[]): { planet: PlanetId; share: number; texts: string[] }[] {
+  const sum = new Map<PlanetId, { w: number; texts: Map<string, number> }>();
+  for (const m of moments)
+    for (const f of m.factors) {
+      if (!f.planet) continue;
+      const e = sum.get(f.planet) ?? { w: 0, texts: new Map() };
+      e.w += f.w;
+      e.texts.set(f.text, (e.texts.get(f.text) ?? 0) + 1);
+      sum.set(f.planet, e);
+    }
+  const total = [...sum.values()].reduce((a, e) => a + e.w, 0) || 1;
+  return [...sum.entries()]
+    .map(([planet, e]) => ({ planet, share: Math.round((e.w / total) * 100), texts: [...e.texts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t) }))
+    .sort((a, b) => b.share - a.share);
 }
 
 export interface TravelWindow {
@@ -332,11 +540,40 @@ export interface TravelWindow {
   purposes: Purpose[];
 }
 
-/** Sample the next few years and join neighbouring samples of the same level into windows. */
-export function travelWindows(n: Natal, promise: TravelPromise, base: TravelBaseline, from: Date, years = 3, stepDays = 2): { samples: TravelMoment[]; windows: TravelWindow[] } {
+/**
+ * Sample the next few years and join neighbouring samples of the same level into windows. The fast
+ * transits can flick a sample across a line for a day or two; a run shorter than `minDays` is folded
+ * into the window around it, and the samples take on the level of the window they end up in.
+ */
+export function travelWindows(n: Natal, promise: TravelPromise, base: TravelBaseline, from: Date, years = 3, stepDays = 2, minDays = 8): { samples: TravelMoment[]; windows: TravelWindow[] } {
   const samples: TravelMoment[] = [];
   const steps = Math.ceil((years * 365.25) / stepDays);
   for (let i = 0; i <= steps; i++) samples.push(travelAt(n, promise, new Date(from.getTime() + i * stepDays * MS_DAY), base));
+
+  let runs: { level: TravelLevel; moments: TravelMoment[] }[] = [];
+  for (const m of samples) {
+    const last = runs[runs.length - 1];
+    if (last && last.level === m.level) last.moments.push(m);
+    else runs.push({ level: m.level, moments: [m] });
+  }
+  const minN = Math.max(1, Math.ceil(minDays / stepDays));
+  for (let guard = samples.length; guard > 0 && runs.length > 1; guard--) {
+    const i = runs.findIndex((r) => r.moments.length < minN);
+    if (i < 0) break;
+    const into = i === 0 ? 1 : i - 1;
+    if (into < i) runs[into].moments.push(...runs[i].moments);
+    else runs[into].moments.unshift(...runs[i].moments);
+    runs.splice(i, 1);
+    const joined: typeof runs = [];
+    for (const r of runs) {
+      const last = joined[joined.length - 1];
+      if (last && last.level === r.level) last.moments.push(...r.moments);
+      else joined.push(r);
+    }
+    runs = joined;
+  }
+  for (const r of runs) for (const m of r.moments) m.level = r.level;
+
   const windows: TravelWindow[] = [];
   let group: TravelMoment[] = [];
   const flush = () => {
@@ -369,6 +606,75 @@ export function travelWindows(n: Natal, promise: TravelPromise, base: TravelBase
   return { samples, windows };
 }
 
+// ---- Checking a trip ---------------------------------------------------------------------------
+
+export interface TripFactor {
+  text: string;
+  layer: TravelFactor["layer"];
+  planet: PlanetId | null;
+  /** Share of the trip's days on which it held, 0..1. */
+  cover: number;
+}
+
+export interface TripCheck {
+  start: Date;
+  end: Date;
+  days: TravelMoment[];
+  /** The highest level any day of the trip reached, and on how many of its days. */
+  level: TravelLevel;
+  levelDays: number;
+  /** Share of your adult life scoring below the trip's average day. */
+  rank: number;
+  drivers: ReturnType<typeof travelDrivers>;
+  factors: TripFactor[];
+  run: RunningDasha | null;
+  year: { age: number; muntha: number; munthaHouse: number; yearLord: PlanetId; mudda: { lord: PlanetId; start: Date; end: Date } | null } | null;
+  chara: { sign: number; house: number; sub: number; subHouse: number; start: Date; end: Date; subStart: Date; subEnd: Date } | null;
+}
+
+/** Read a stretch of dates: what was running, which planets carried it, and how it ranks in your life. */
+export function travelTrip(n: Natal, promise: TravelPromise, base: TravelBaseline, start: Date, end: Date): TripCheck {
+  const span = Math.max(0, end.getTime() - start.getTime());
+  const count = Math.min(120, Math.max(1, Math.round(span / MS_DAY) + 1));
+  const days: TravelMoment[] = [];
+  for (let i = 0; i < count; i++) days.push(travelAt(n, promise, new Date(start.getTime() + (count === 1 ? 0 : (span * i) / (count - 1))), base));
+  const rankOf: Record<TravelLevel, number> = { ordinary: 0, raised: 1, high: 2 };
+  const level = days.reduce<TravelLevel>((a, m) => (rankOf[m.level] > rankOf[a] ? m.level : a), "ordinary");
+  const avg = days.reduce((a, m) => a + m.total, 0) / days.length;
+
+  const seen = new Map<string, TripFactor & { n: number }>();
+  for (const m of days)
+    for (const f of m.factors) {
+      const e = seen.get(f.text) ?? { text: f.text, layer: f.layer, planet: f.planet, cover: 0, n: 0 };
+      e.n += 1;
+      seen.set(f.text, e);
+    }
+  const order: Record<TravelFactor["layer"], number> = { period: 0, year: 1, slow: 2, fast: 3 };
+  const factors = [...seen.values()]
+    .map(({ n: k, ...f }) => ({ ...f, cover: k / days.length }))
+    .sort((a, b) => order[a.layer] - order[b.layer] || b.cover - a.cover);
+
+  const mid = new Date(start.getTime() + span / 2);
+  const v = yearAt(n, mid);
+  const md = v?.mudda.find((m) => mid >= m.start && mid < m.end) ?? null;
+  const ch = charaAt(jaimini(n).dasa, mid);
+  return {
+    start,
+    end,
+    days,
+    level,
+    levelDays: days.filter((m) => m.level === level).length,
+    rank: travelRank(base, avg),
+    drivers: travelDrivers(days),
+    factors,
+    run: days[0].run,
+    year: v ? { age: v.age, muntha: v.muntha, munthaHouse: v.munthaHouseBirth, yearLord: v.yearLord, mudda: md } : null,
+    chara: ch
+      ? { sign: ch.dasa.sign, house: houseFrom(n.lagnaSign, ch.dasa.sign), sub: ch.sub.sign, subHouse: houseFrom(n.lagnaSign, ch.sub.sign), start: ch.dasa.start, end: ch.dasa.end, subStart: ch.sub.start, subEnd: ch.sub.end }
+      : null,
+  };
+}
+
 // ---- The day of departure ---------------------------------------------------------------------
 
 export type Direction = "north" | "east" | "south" | "west";
@@ -387,9 +693,15 @@ export interface FlightDay {
   blocked: boolean;
 }
 
-export function flightDay(n: Natal, frame: DayFrame, direction: Direction | null): FlightDay {
+/**
+ * `at` reads the Moon at the actual moment of leaving instead of at midday. The weekday (and so the
+ * soolai) follows the Tamil day, which runs from sunrise to sunrise: a 3am flight belongs to the
+ * day before.
+ */
+export function flightDay(n: Natal, frame: DayFrame, direction: Direction | null, at?: Date): FlightDay {
   const p = panchangFor(frame);
-  const mid = new Date(frame.sunrise.getTime() + frame.dayLength / 2);
+  const noon = new Date(frame.sunrise.getTime() + frame.dayLength / 2);
+  const mid = at && at >= frame.sunrise && at < frame.nextSunrise ? at : noon;
   const star = spanAt(p.nakshatra, mid).value;
   const moonSign = spanAt(p.moonSign, mid).value;
   const tithi = spanAt(p.tithi, mid).value;
