@@ -8,7 +8,8 @@ import { createPortal } from "react-dom";
 import { Graha } from "./Graha";
 import { useDay, useStore, useStored, useToday } from "./store";
 import { ToneDot } from "./ui";
-import { coreEvents, HORIZON_MS, lifeEvents, NeramEvent } from "@/lib/astro/events";
+import { coreEvents, HORIZON_MS, lifeEvents, moneyEvents, NeramEvent } from "@/lib/astro/events";
+import { MONEY_DIARY_KEY, MoneyEntry } from "@/lib/astro/wealth";
 import { addDaysKey, dateKey, fmtDate, fmtTime, MS_DAY, MS_HOUR } from "@/lib/astro/time";
 
 const SEEN_KEY = "neram.notify.seen.v1";
@@ -21,6 +22,13 @@ function KindIcon({ e }: { e: NeramEvent }) {
       <svg {...common} className="text-peacock">
         <path d="M12 3l1.5 3h-3L12 3zM8 8h8l1 4H7l1-4zM5 12h14v2H5zM6 14v6h12v-6" />
         <path d="M10 20v-3h4v3" />
+      </svg>
+    );
+  if (e.kind === "money")
+    return (
+      <svg {...common} className="text-go">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M15 8.5h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9M12 6.5v2M12 16.5v2" />
       </svg>
     );
   if (e.kind === "window")
@@ -56,9 +64,11 @@ export function Notifications() {
     [ready, natal, today, tomorrow, hourStamp, tz, profile.here],
   );
   const life = useMemo(() => (opened ? lifeEvents(natal, new Date(dayStamp * MS_DAY), tz) : []), [opened, natal, dayStamp, tz]);
+  const [diary] = useStored<MoneyEntry[]>(MONEY_DIARY_KEY, []);
+  const money = useMemo(() => (ready ? moneyEvents(natal, diary, new Date(hourStamp * MS_HOUR), profile.here) : []), [ready, natal, diary, hourStamp, profile.here]);
 
   // Drop windows that have already closed, and running events whose end has passed.
-  const events = useMemo(() => [...core, ...life].filter((e) => !e.until || e.until > now).sort((a, b) => a.at.getTime() - b.at.getTime()), [core, life, now]);
+  const events = useMemo(() => [...core, ...money, ...life].filter((e) => !e.until || e.until > now).sort((a, b) => a.at.getTime() - b.at.getTime()), [core, money, life, now]);
   const soon = events.filter((e) => e.at.getTime() - now.getTime() <= HORIZON_MS);
   const unseen = soon.filter((e) => !seen.includes(e.id));
   const good = soon.filter((e) => e.tone === "good").length;

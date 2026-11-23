@@ -11,12 +11,13 @@ import { marriageBaseline, marriagePromise, marriageWindows } from "./marriage";
 import { dayFrame, DayFrame, nextVanija, pakshaOf, panchangFor, Place } from "./panchang";
 import { fmtDays, isRetro, nextStation, RETRO_PLANETS, retroSpell } from "./retro";
 import { bestWindows, Segment, TIER } from "./score";
-import { addDaysKey, fmtDateLong, fmtDuration, fmtTime, MS_DAY, MS_HOUR } from "./time";
+import { addDaysKey, dateKey, fmtDateLong, fmtDuration, fmtTime, MS_DAY, MS_HOUR } from "./time";
 import { chandraBala, contacts, taraBala, Tone, upcomingIngresses } from "./transits";
 import { travelBaseline, travelPromise, travelWindows } from "./travel";
 import { completedYears, solarReturn } from "./varsha";
+import { ENTRY_LABEL, ENTRY_STREAM, loanBalance, MoneyEntry, moneyDay, repayDays, streamDay } from "./wealth";
 
-export type EventKind = "planet" | "moon" | "dasa" | "temple" | "window" | "year" | "life";
+export type EventKind = "planet" | "moon" | "dasa" | "temple" | "window" | "year" | "life" | "money";
 
 export interface NeramEvent {
   id: string;
@@ -75,6 +76,54 @@ export interface CoreInput {
 
 /** Standing temple days: weekday 0 is Sunday. */
 const TEMPLE_DAYS = [{ weekday: 3, title: "Anjaneyar temple", tamil: "ஆஞ்சநேயர் கோவில்", note: "Your Wednesday visit." }];
+
+/**
+ * Money you are expecting or owe, from the diary on the Money page: each entry falling in the next
+ * days, read for its own stream, and a Tuesday to repay while a loan is still open.
+ */
+export function moneyEvents(natal: Natal, entries: MoneyEntry[], now: Date, place: Place): NeramEvent[] {
+  const out: NeramEvent[] = [];
+  const tz = place.tz;
+  const todayKey = dateKey(now, tz);
+  const keys = [0, 1, 2].map((i) => addDaysKey(todayKey, i));
+  for (const e of entries) {
+    if (!keys.includes(e.date)) continue;
+    const frame = dayFrame(e.date, place);
+    const stream = ENTRY_STREAM[e.kind];
+    const day = stream ? streamDay(natal, frame, stream) : moneyDay(natal, frame);
+    const top = day.signals.find((s) => s.weight !== 0);
+    const amount = e.amount ? ` (${e.amount.toLocaleString("en-IN")})` : "";
+    out.push({
+      id: `money-${e.id}-${e.date}`,
+      kind: "money",
+      at: frame.sunrise,
+      until: frame.nextSunrise,
+      tone: day.tone,
+      title: `${ENTRY_LABEL[e.kind]}${e.expected ? " expected" : ""}${amount}`,
+      tamil: "பண வரவு",
+      detail: `${day.label} for it (${day.score} of 100)${top ? `. ${top.text}` : "."}${e.note ? ` ${e.note}` : ""}`,
+      href: "/money",
+    });
+  }
+  const bal = loanBalance(entries);
+  if (bal.left > 0) {
+    const tue = repayDays(natal, place, todayKey, 3)[0];
+    if (tue)
+      out.push({
+        id: `repay-${tue.frame.dateKey}`,
+        kind: "money",
+        at: tue.frame.sunrise,
+        until: tue.frame.nextSunrise,
+        tone: "good",
+        planet: "Ma",
+        title: `A Tuesday to repay (${bal.left.toLocaleString("en-IN")} still owed)`,
+        tamil: "கடன் அடைக்க",
+        detail: `Sevvai's day, the traditional day to clear a debt. Sevvai horas: ${tue.horas.map((h) => `${fmtTime(h.start, tz)} to ${fmtTime(h.end, tz)}`).join(", ")}.`,
+        href: "/money#loans",
+      });
+  }
+  return out;
+}
 
 /** The cheap, day-to-day events. Safe to compute on every page. */
 export function coreEvents({ natal, now, tz, frame, place, today, tomorrow }: CoreInput): NeramEvent[] {
